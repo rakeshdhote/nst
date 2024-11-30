@@ -41,7 +41,7 @@ jobs:
 
       - name: Build Next.js app
         run: |
-          pnpm build
+          pnpm run build
           ls -la out/
 
       - name: Build the app
