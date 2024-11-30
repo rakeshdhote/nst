@@ -27,7 +27,7 @@ export default function Home() {
               placeholder="Enter your name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="min-h-[100px]"
+              className="min-h-[20px]"
             />
             
             <Button 
