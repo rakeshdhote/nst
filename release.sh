@@ -204,7 +204,7 @@ else
     echo -e "${YELLOW}Tag v$VERSION already exists, skipping tag creation${NC}"
 fi
 
-echo -e "${GREEN}GitHub Actions workflow will automatically build for Windows${NC}"
+echo -e "${GREEN}GitHub Actions workflow will automatically build for platform: $PLATFORM${NC}"
 
 # Function to trigger GitHub workflow
 trigger_workflow() {
@@ -241,14 +241,8 @@ trigger_workflow() {
     fi
 }
 
-# Trigger workflows based on platform
-if [ "$PLATFORM" = "all" ]; then
-    for p in linux windows macos-intel macos-arm; do
-        trigger_workflow $p
-    done
-else
-    trigger_workflow $PLATFORM
-fi
+# Trigger workflow for the specified platform
+trigger_workflow "$PLATFORM"
 
 echo -e "${GREEN}Release process initiated successfully!${NC}"
 echo "You can monitor the build status at: https://github.com/$repo_path/actions"
