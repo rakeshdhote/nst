@@ -50,6 +50,9 @@ fi
 read -p "Enter commit message (default: Release $new_tag): " commit_message
 commit_message=${commit_message:-"Release $new_tag"}
 
+# Stage all changes
+git add .
+
 # Stage version.txt
 git add "$VERSION_FILE"
 
@@ -61,4 +64,9 @@ git tag -a "$new_tag" -m "Version $new_version"
 git push origin main --tags
 
 echo "Successfully created and pushed version $new_tag"
-echo "GitHub Actions workflow will start automatically"
+echo "To trigger a GitHub release build:"
+echo "1. Go to GitHub Actions"
+echo "2. Select 'Release' workflow"
+echo "3. Click 'Run workflow'"
+echo "4. Select the platform you want to build for"
+echo "5. Click 'Run workflow' to start the build"

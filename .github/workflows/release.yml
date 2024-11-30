@@ -75,16 +75,6 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
-      # Install project dependencies using pnpm
-      - name: Install dependencies
-        run: pnpm install
-
-      # Build the Tauri application
-      - name: Build Tauri App
-        uses: tauri-apps/tauri-action@v0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       # Install Linux-specific dependencies
       - name: Install dependencies (ubuntu only)
         run: |
@@ -103,6 +93,16 @@ jobs:
             libgdk3.0-cil-dev \
             libcairo2-dev \
             patchelf
+
+      # Install project dependencies using pnpm
+      - name: Install dependencies
+        run: pnpm install
+
+      # Build the Tauri application
+      - name: Build Tauri App
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # Cache build outputs for both Next.js and Tauri
       - name: Cache Build Output
@@ -147,6 +147,8 @@ jobs:
       # Install Rust toolchain
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-apple-darwin
 
       # Install project dependencies using pnpm
       - name: Install dependencies
@@ -203,6 +205,8 @@ jobs:
       # Install Rust toolchain
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin
 
       # Install project dependencies using pnpm
       - name: Install dependencies
