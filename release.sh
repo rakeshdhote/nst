@@ -124,8 +124,7 @@ git push origin main
 # Create and push tag
 echo -e "${YELLOW}Creating git tag v$NEW_VERSION${NC}"
 if ! git rev-parse "v$NEW_VERSION" >/dev/null 2>&1; then
-    git tag -a "v$NEW_VERSION" -m "Release v$NEW_VERSION
-platform: $PLATFORM"
+    git tag -a "v$NEW_VERSION" -m "Release v$NEW_VERSION for $PLATFORM"
     git push origin "v$NEW_VERSION"
     echo -e "${GREEN}Successfully created and pushed version v$NEW_VERSION${NC}"
 else
@@ -140,9 +139,6 @@ trigger_workflow() {
     
     echo -e "${YELLOW}Triggering release workflow for platform: $platform${NC}"
     
-    # Construct the workflow dispatch payload
-    local payload="{\"ref\":\"main\",\"inputs\":{\"platform\":\"$platform\",\"release_type\":\"$RELEASE_TYPE\",\"create_release\":\"true\"}}"
-    
     # Get the repository information from git config
     local remote_url=$(git config --get remote.origin.url)
     local repo_path=$(echo $remote_url | sed 's/.*github.com[:/]\(.*\).git/\1/')
@@ -154,17 +150,44 @@ trigger_workflow() {
         exit 1
     fi
     
-    # Trigger the workflow
-    curl -X POST \
-         -H "Accept: application/vnd.github.v3+json" \
-         -H "Authorization: token $GITHUB_TOKEN" \
-         "https://api.github.com/repos/$repo_path/actions/workflows/release.yml/dispatches" \
-         -d "$payload"
+    # Construct the workflow dispatch payload
+    local payload=$(cat <<EOF
+{
+  "ref": "main",
+  "inputs": {
+    "platform": "$platform",
+    "release_type": "$RELEASE_TYPE",
+    "create_release": "true"
+  }
+}
+EOF
+)
     
-    if [ $? -eq 0 ]; then
+    # Trigger the workflow with verbose output
+    echo -e "${YELLOW}Sending request to GitHub API...${NC}"
+    response=$(curl -s -X POST \
+         -H "Accept: application/vnd.github.v3+json" \
+         -H "Authorization: Bearer $GITHUB_TOKEN" \
+         "https://api.github.com/repos/$repo_path/actions/workflows/release.yml/dispatches" \
+         -d "$payload" \
+         -w "\nHTTP_STATUS:%{http_code}")
+    
+    status_code=$(echo "$response" | grep "HTTP_STATUS" | cut -d":" -f2)
+    response_body=$(echo "$response" | grep -v "HTTP_STATUS")
+    
+    echo -e "${YELLOW}Response status code: $status_code${NC}"
+    if [ -n "$response_body" ]; then
+        echo -e "${YELLOW}Response body: $response_body${NC}"
+    fi
+    
+    if [ "$status_code" -eq 204 ]; then
         echo -e "${GREEN}Successfully triggered release workflow for $platform${NC}"
     else
         echo -e "${RED}Failed to trigger release workflow for $platform${NC}"
+        echo -e "${RED}Status code: $status_code${NC}"
+        if [ -n "$response_body" ]; then
+            echo -e "${RED}Response: $response_body${NC}"
+        fi
         exit 1
     fi
 }
