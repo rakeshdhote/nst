@@ -1,47 +1,93 @@
+# This workflow handles the release process for the Tauri application
+# It can be triggered either by pushing a tag or manually through the GitHub Actions UI
 name: Release
 on:
+  # Triggered when a tag starting with 'v' is pushed (e.g., v1.0.0)
   push:
     tags:
       - 'v*'
+  # Allows manual triggering with platform selection
   workflow_dispatch:
+    inputs:
+      # Option to build for all platforms
+      build-all:
+        description: 'Build for all platforms'
+        type: boolean
+        default: false
+      # Input options for selecting which platforms to build for
+      build-windows:
+        description: 'Build for Windows'
+        type: boolean
+        default: true
+      build-macos-intel:
+        description: 'Build for macOS (Intel)'
+        type: boolean
+        default: false
+      build-macos-arm:
+        description: 'Build for macOS (Apple Silicon)'
+        type: boolean
+        default: false
+      build-linux:
+        description: 'Build for Linux'
+        type: boolean
+        default: false
 
 jobs:
   release:
+    # Required for creating GitHub releases
     permissions:
       contents: write
     strategy:
+      # Continue with other platforms if one fails
       fail-fast: false
       matrix:
+        # Define build configurations for each platform
         include:
-          # - platform: 'macos-latest' # for Arm based macs (M1 and above).
-          #   args: '--target aarch64-apple-darwin'
-          # - platform: 'macos-latest' # for Intel based macs.
-          #   args: '--target x86_64-apple-darwin'
-          # - platform: 'ubuntu-22.04' # for Tauri v1 you could replace this with ubuntu-20.04.
-          #   args: ''
+          # macOS ARM64 (Apple Silicon)
+          - platform: 'macos-latest'
+            args: '--target aarch64-apple-darwin'
+            build-input: build-macos-arm
+          # macOS x64 (Intel)
+          - platform: 'macos-latest'
+            args: '--target x86_64-apple-darwin'
+            build-input: build-macos-intel
+          # Linux (Ubuntu 22.04)
+          - platform: 'ubuntu-22.04'
+            args: ''
+            build-input: build-linux
+          # Windows
           - platform: 'windows-latest'
             args: ''
+            build-input: build-windows
+    # Use the platform specified in the matrix
     runs-on: ${{ matrix.platform }}
-
     steps:
+      # Check out the repository code
       - name: Checkout repository
         uses: actions/checkout@v4
+        # Run if: tag push OR build-all is true OR specific platform is selected
+        if: github.event_name == 'push' || github.event.inputs.build-all == 'true' || github.event.inputs[matrix.build-input] == 'true'
 
+      # Set up Node.js environment with caching
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: 'npm'
 
+      # Install and configure pnpm package manager
       - name: Install pnpm
         uses: pnpm/action-setup@v2
         with:
           version: latest
 
+      # Configure pnpm store path for caching
       - name: Get pnpm store directory
         shell: bash
         run: |
           echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
 
+      # Cache pnpm dependencies for faster builds
       - name: Cache pnpm dependencies
         uses: actions/cache@v3
         with:
@@ -50,22 +96,29 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
 
+      # Install Rust toolchain
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Cache Rust dependencies
+      # Cache Rust dependencies and build artifacts
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "src-tauri -> target"
+          cache-on-failure: true
+
+      # Cache build outputs for both Next.js and Tauri
+      - name: Cache Build Output
         uses: actions/cache@v3
         with:
           path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+            out
+            src-tauri/target
+          key: ${{ runner.os }}-build-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-cargo-
+            ${{ runner.os }}-build-
 
+      # Install Linux-specific dependencies
       - name: Install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-22.04'
         run: |
@@ -78,40 +131,94 @@ jobs:
             librsvg2-dev \
             patchelf
 
+      # Install project dependencies using pnpm
       - name: Install project dependencies
         run: pnpm install
 
+      # Build the Next.js frontend
       - name: Build Next.js app
         run: pnpm run build
 
-      - name: List output directory (Unix)
-        if: runner.os != 'Windows'
-        run: ls -la out/
+      # Install code signing tools for Windows
+      - name: Install Windows Signing Dependencies
+        if: matrix.platform == 'windows-latest'
+        run: |
+          dotnet tool install --global AzureSignTool
 
-      - name: List output directory (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: Get-ChildItem -Path out/ -Force
+      # Build and sign Windows executables
+      - name: Build and Sign Windows App
+        if: (matrix.platform == 'windows-latest') && (github.event_name == 'push' || github.event.inputs.build-all == 'true' || github.event.inputs[matrix.build-input] == 'true')
+        env:
+          # Tauri update keys
+          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+          # Azure Key Vault credentials for code signing
+          AZURE_KEY_VAULT_URI: ${{ secrets.AZURE_KEY_VAULT_URI }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          CERTIFICATE_NAME: ${{ secrets.CERTIFICATE_NAME }}
+          # GitHub token for releases
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Additional Tauri signing keys
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: |
+          pnpm run tauri build
+          $msi = Get-ChildItem -Path "src-tauri\target\release\bundle\msi\*.msi" -File | Select-Object -First 1
+          $exe = Get-ChildItem -Path "src-tauri\target\release\bundle\nsis\*.exe" -File | Select-Object -First 1
+          
+          # Sign MSI installer
+          AzureSignTool sign `
+            -kvu "$env:AZURE_KEY_VAULT_URI" `
+            -kvi "$env:AZURE_CLIENT_ID" `
+            -kvt "$env:AZURE_TENANT_ID" `
+            -kvs "$env:AZURE_CLIENT_SECRET" `
+            -kvc "$env:CERTIFICATE_NAME" `
+            -tr http://timestamp.digicert.com `
+            -v "$msi"
+          
+          # Sign EXE installer
+          AzureSignTool sign `
+            -kvu "$env:AZURE_KEY_VAULT_URI" `
+            -kvi "$env:AZURE_CLIENT_ID" `
+            -kvt "$env:AZURE_TENANT_ID" `
+            -kvs "$env:AZURE_CLIENT_SECRET" `
+            -kvc "$env:CERTIFICATE_NAME" `
+            -tr http://timestamp.digicert.com `
+            -v "$exe"
 
-      - name: Build the app
+      # Build for non-Windows platforms using Tauri action
+      - name: Build Non-Windows App
+        if: (matrix.platform != 'windows-latest') && (github.event_name == 'push' || github.event.inputs.build-all == 'true' || github.event.inputs[matrix.build-input] == 'true')
         uses: tauri-apps/tauri-action@v0
-        # env:
-        #   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        # with:
-        #   tagName: ${{ github.ref_name }}
-        #   releaseName: 'App v__VERSION__'
-        #   releaseBody: 'See the assets to download and install this version.'
-        #   releaseDraft: true
-        #   prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-            # you might also need to add app signing secrets here
         with:
+          # Pass platform-specific build arguments
+          args: ${{ matrix.args }}
           tagName: v__VERSION__
           releaseName: "App v__VERSION__"
           releaseBody: "See the assets to download this version and install."
-          includeUpdaterJson: true # this will include the latest.json file in the release
+          includeUpdaterJson: true
           releaseDraft: true
           prerelease: true
+
+      # Create GitHub release for Windows builds
+      - name: Create Release (Windows)
+        if: (matrix.platform == 'windows-latest') && (github.event_name == 'push' || github.event.inputs.build-all == 'true' || github.event.inputs[matrix.build-input] == 'true')
+        uses: softprops/action-gh-release@v1
+        with:
+          # Include both MSI and EXE installers in the release
+          files: |
+            src-tauri/target/release/bundle/msi/*.msi
+            src-tauri/target/release/bundle/nsis/*.exe
+          tag_name: v__VERSION__
+          name: "App v__VERSION__"
+          body: "See the assets to download this version and install."
+          draft: true
+          prerelease: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
