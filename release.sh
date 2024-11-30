@@ -157,7 +157,8 @@ trigger_workflow() {
   "inputs": {
     "platform": "$platform",
     "release_type": "$RELEASE_TYPE",
-    "create_release": "true"
+    "create_release": "true",
+    "version": "$(get_current_version)"
   }
 }
 EOF

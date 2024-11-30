@@ -15,6 +15,10 @@ on:
           - windows
           - macos-intel
           - macos-arm
+      version:
+        description: 'Release version'
+        type: string
+        required: true
       release_type:
         description: 'Release type'
         type: choice
@@ -97,11 +101,15 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: v__VERSION__
-          releaseName: "v__VERSION__"
-          releaseBody: "See the assets to download this version and install."
-          releaseDraft: true
-          prerelease: false
+          tagName: v${{ github.event.inputs.version || '0.0.1' }}
+          releaseName: v${{ github.event.inputs.version || '0.0.1' }}
+          releaseBody: |
+            See the assets to download and install this version.
+            
+            Changes in this version:
+            - Release build
+          releaseDraft: false
+          prerelease: ${{ github.event.inputs.release_type != 'production' }}
           includeUpdaterJson: true
 
       # Cache build outputs for both Next.js and Tauri
@@ -156,11 +164,15 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: v__VERSION__
-          releaseName: "v__VERSION__"
-          releaseBody: "See the assets to download this version and install."
-          releaseDraft: true
-          prerelease: false
+          tagName: v${{ github.event.inputs.version || '0.0.1' }}
+          releaseName: v${{ github.event.inputs.version || '0.0.1' }}
+          releaseBody: |
+            See the assets to download and install this version.
+            
+            Changes in this version:
+            - Release build
+          releaseDraft: false
+          prerelease: ${{ github.event.inputs.release_type != 'production' }}
           args: '--target x86_64-apple-darwin'
 
       # Cache build outputs for both Next.js and Tauri
@@ -215,11 +227,15 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: v__VERSION__
-          releaseName: "v__VERSION__"
-          releaseBody: "See the assets to download this version and install."
-          releaseDraft: true
-          prerelease: false
+          tagName: v${{ github.event.inputs.version || '0.0.1' }}
+          releaseName: v${{ github.event.inputs.version || '0.0.1' }}
+          releaseBody: |
+            See the assets to download and install this version.
+            
+            Changes in this version:
+            - Release build
+          releaseDraft: false
+          prerelease: ${{ github.event.inputs.release_type != 'production' }}
           args: '--target aarch64-apple-darwin'
 
       # Cache build outputs for both Next.js and Tauri
@@ -238,79 +254,51 @@ jobs:
     permissions:
       contents: write
     runs-on: windows-latest
-    env:
-      ENABLE_CODE_SIGNING: ${{ secrets.WINDOWS_SIGN_CERT != '' }}
-      WINDOWS_SIGN_CERT: ${{ secrets.WINDOWS_SIGN_CERT }}
-      WINDOWS_SIGN_CERT_PASSWORD: ${{ secrets.WINDOWS_SIGN_CERT_PASSWORD }}
-      AZURE_KEY_VAULT_URI: ${{ secrets.AZURE_KEY_VAULT_URI }}
-      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-      AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
     steps:
-      # Check out the repository code
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Install and configure pnpm package manager
       - name: Install pnpm
         uses: pnpm/action-setup@v2
         with:
           version: latest
 
-      # Set up Node.js environment with caching
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'pnpm'
 
-      # Install Rust toolchain
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
-      # Install project dependencies using pnpm
       - name: Install dependencies
         run: pnpm install
 
-      # Set up code signing
-      - name: Set up code signing
-        if: env.ENABLE_CODE_SIGNING == 'true'
-        run: |
-          if [[ -n "${{ env.AZURE_KEY_VAULT_URI }}" ]]; then
-            echo "Using Azure Key Vault for signing"
-          elif [[ -n "${{ env.WINDOWS_SIGN_CERT }}" ]]; then
-            echo "Using local certificate for signing"
-            # Remove any existing certificate files
-            rm -f windows-cert.b64 windows-cert.pfx
-            # Create and decode certificate
-            echo "${{ env.WINDOWS_SIGN_CERT }}" > windows-cert.b64
-            certutil -decode windows-cert.b64 windows-cert.pfx
-            # Verify certificate was created
-            if [ ! -f windows-cert.pfx ]; then
-              echo "Failed to create certificate file"
-              exit 1
-            fi
-        shell: bash
-
-      # Build the app
-      - name: Build the app
+      - name: Build Tauri App
+        uses: tauri-apps/tauri-action@v0
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          ENABLE_CODE_SIGNING: ${{ env.ENABLE_CODE_SIGNING }}
-          WINDOWS_SIGN_CERT_PASSWORD: ${{ secrets.WINDOWS_SIGN_CERT_PASSWORD }}
-        run: |
-          if [[ "${{ env.ENABLE_CODE_SIGNING }}" == "true" ]]; then
-            pnpm tauri build
-          else
-            pnpm tauri build
-          fi
-        shell: bash
+        with:
+          tagName: v${{ github.event.inputs.version || '0.0.1' }}
+          releaseName: v${{ github.event.inputs.version || '0.0.1' }}
+          releaseBody: |
+            See the assets to download and install this version.
+            
+            Changes in this version:
+            - Release build
+          releaseDraft: false
+          prerelease: ${{ github.event.inputs.release_type != 'production' }}
+          includeUpdaterJson: true
 
-      # Clean up sensitive files
-      - name: Clean up certificates
-        if: always()
-        run: |
-          rm -f windows-cert.b64 windows-cert.pfx
-        shell: bash
+      - name: Cache Build Output
+        uses: actions/cache@v3
+        with:
+          path: |
+            out
+            src-tauri/target
+          key: ${{ runner.os }}-build-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-build-
