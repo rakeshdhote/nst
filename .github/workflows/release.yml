@@ -27,16 +27,10 @@ on:
         description: 'Create GitHub release'
         type: boolean
         default: true
-  # Optional automatic trigger on tag push (disabled by default)
-  push:
-    tags:
-      - 'v*'
 
 jobs:
   build-linux:
-    if: >-
-      (github.event_name == 'workflow_dispatch' && (github.event.inputs.platform == 'linux' || github.event.inputs.platform == 'all')) ||
-      github.event_name == 'push'
+    if: github.event_name == 'workflow_dispatch' && (github.event.inputs.platform == 'linux' || github.event.inputs.platform == 'all')
     # Required for creating GitHub releases
     permissions:
       contents: write
@@ -102,6 +96,13 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: v__VERSION__
+          releaseName: "v__VERSION__"
+          releaseBody: "See the assets to download this version and install."
+          releaseDraft: true
+          prerelease: false
+          includeUpdaterJson: true
 
       # Cache build outputs for both Next.js and Tauri
       - name: Cache Build Output
@@ -115,9 +116,7 @@ jobs:
             ${{ runner.os }}-build-
 
   build-macos-intel:
-    if: >-
-      (github.event_name == 'workflow_dispatch' && (github.event.inputs.platform == 'macos-intel' || github.event.inputs.platform == 'all')) ||
-      github.event_name == 'push'
+    if: github.event_name == 'workflow_dispatch' && (github.event.inputs.platform == 'macos-intel' || github.event.inputs.platform == 'all')
     # Required for creating GitHub releases
     permissions:
       contents: write
@@ -157,6 +156,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
+          tagName: v__VERSION__
+          releaseName: "v__VERSION__"
+          releaseBody: "See the assets to download this version and install."
+          releaseDraft: true
+          prerelease: false
           args: '--target x86_64-apple-darwin'
 
       # Cache build outputs for both Next.js and Tauri
@@ -171,9 +175,7 @@ jobs:
             ${{ runner.os }}-build-
 
   build-macos-arm:
-    if: >-
-      (github.event_name == 'workflow_dispatch' && (github.event.inputs.platform == 'macos-arm' || github.event.inputs.platform == 'all')) ||
-      github.event_name == 'push'
+    if: github.event_name == 'workflow_dispatch' && (github.event.inputs.platform == 'macos-arm' || github.event.inputs.platform == 'all')
     # Required for creating GitHub releases
     permissions:
       contents: write
@@ -213,6 +215,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
+          tagName: v__VERSION__
+          releaseName: "v__VERSION__"
+          releaseBody: "See the assets to download this version and install."
+          releaseDraft: true
+          prerelease: false
           args: '--target aarch64-apple-darwin'
 
       # Cache build outputs for both Next.js and Tauri
@@ -227,9 +234,7 @@ jobs:
             ${{ runner.os }}-build-
 
   build-windows:
-    if: >-
-      (github.event_name == 'workflow_dispatch' && (github.event.inputs.platform == 'windows' || github.event.inputs.platform == 'all')) ||
-      github.event_name == 'push'
+    if: github.event_name == 'workflow_dispatch' && (github.event.inputs.platform == 'windows' || github.event.inputs.platform == 'all')
     permissions:
       contents: write
     runs-on: windows-latest
@@ -285,7 +290,6 @@ jobs:
               echo "Failed to create certificate file"
               exit 1
             fi
-          fi
         shell: bash
 
       # Build the app
