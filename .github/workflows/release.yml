@@ -31,8 +31,6 @@ on:
   push:
     tags:
       - 'v*'
-    paths-ignore:
-      - '**'  # Ignore all paths by default, requiring manual confirmation
 
 jobs:
   check-auto-release:
@@ -48,8 +46,12 @@ jobs:
             echo "should_release=true" >> $GITHUB_OUTPUT
             echo "platform=${{ github.event.inputs.platform }}" >> $GITHUB_OUTPUT
           elif [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" =~ ^refs/tags/v ]]; then
+            # Extract platform from the commit message that triggered the tag
+            git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+            TAG_MESSAGE=$(git tag -l --format='%(contents)' "${GITHUB_REF#refs/tags/}")
+            PLATFORM=$(echo "$TAG_MESSAGE" | grep -oP 'platform:\s*\K\w+' || echo "")
             echo "should_release=true" >> $GITHUB_OUTPUT
-            echo "platform=${{ github.event.inputs.platform || 'windows' }}" >> $GITHUB_OUTPUT
+            echo "platform=${PLATFORM:-windows}" >> $GITHUB_OUTPUT
           else
             echo "should_release=false" >> $GITHUB_OUTPUT
             echo "platform=none" >> $GITHUB_OUTPUT
@@ -57,15 +59,15 @@ jobs:
 
   build-linux:
     needs: check-auto-release
+    if: >-
+      needs.check-auto-release.outputs.should_release == 'true' &&
+      (needs.check-auto-release.outputs.platform == 'linux' || needs.check-auto-release.outputs.platform == 'all')
     # Required for creating GitHub releases
     permissions:
       contents: write
     # Use the latest Ubuntu environment
     runs-on: ubuntu-22.04
     # Run if: tag push OR workflow_dispatch with platform 'linux'
-    if: >-
-      (github.event_name == 'workflow_dispatch' && (github.event.inputs.platform == 'linux' || github.event.inputs.platform == 'all')) ||
-      (github.event_name == 'push' && needs.check-auto-release.outputs.should_release == 'true' && (needs.check-auto-release.outputs.platform == 'linux' || needs.check-auto-release.outputs.platform == 'all'))
     steps:
       # Check out the repository code
       - name: Checkout repository
@@ -139,15 +141,14 @@ jobs:
 
   build-macos-intel:
     needs: check-auto-release
+    if: >-
+      needs.check-auto-release.outputs.should_release == 'true' &&
+      (needs.check-auto-release.outputs.platform == 'macos-intel' || needs.check-auto-release.outputs.platform == 'all')
     # Required for creating GitHub releases
     permissions:
       contents: write
     # Use the latest macOS environment
     runs-on: macos-latest
-    # Run if: tag push OR workflow_dispatch with platform 'macos-intel'
-    if: >-
-      (github.event_name == 'workflow_dispatch' && (github.event.inputs.platform == 'macos-intel' || github.event.inputs.platform == 'all')) ||
-      (github.event_name == 'push' && needs.check-auto-release.outputs.should_release == 'true' && (needs.check-auto-release.outputs.platform == 'macos-intel' || needs.check-auto-release.outputs.platform == 'all'))
     steps:
       # Check out the repository code
       - name: Checkout repository
@@ -197,15 +198,14 @@ jobs:
 
   build-macos-arm:
     needs: check-auto-release
+    if: >-
+      needs.check-auto-release.outputs.should_release == 'true' &&
+      (needs.check-auto-release.outputs.platform == 'macos-arm' || needs.check-auto-release.outputs.platform == 'all')
     # Required for creating GitHub releases
     permissions:
       contents: write
     # Use the latest macOS environment
     runs-on: macos-latest
-    # Run if: tag push OR workflow_dispatch with platform 'macos-arm'
-    if: >-
-      (github.event_name == 'workflow_dispatch' && (github.event.inputs.platform == 'macos-arm' || github.event.inputs.platform == 'all')) ||
-      (github.event_name == 'push' && needs.check-auto-release.outputs.should_release == 'true' && (needs.check-auto-release.outputs.platform == 'macos-arm' || needs.check-auto-release.outputs.platform == 'all'))
     steps:
       # Check out the repository code
       - name: Checkout repository
@@ -255,12 +255,12 @@ jobs:
 
   build-windows:
     needs: check-auto-release
-    permissions:
-      contents: write
-    runs-on: windows-latest
     if: >-
       needs.check-auto-release.outputs.should_release == 'true' &&
       (needs.check-auto-release.outputs.platform == 'windows' || needs.check-auto-release.outputs.platform == 'all')
+    permissions:
+      contents: write
+    runs-on: windows-latest
     env:
       ENABLE_CODE_SIGNING: ${{ secrets.WINDOWS_SIGN_CERT != '' }}
       WINDOWS_SIGN_CERT: ${{ secrets.WINDOWS_SIGN_CERT }}

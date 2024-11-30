@@ -1,5 +1,59 @@
 #!/bin/bash
 
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+# Function to show help
+show_help() {
+    echo "Usage: $0 -p <platform>"
+    echo "Options:"
+    echo "  -p <platform>     Platform to build for (linux, windows, macos-intel, macos-arm, all)"
+    echo "  -t <type>         Release type (production, beta, alpha) [default: production]"
+    echo "  -h                Show this help message"
+}
+
+# Function to validate platform
+validate_platform() {
+    local platform=$1
+    case $platform in
+        linux|windows|macos-intel|macos-arm|all)
+            return 0
+            ;;
+        *)
+            echo -e "${RED}Error: Invalid platform '$platform'${NC}"
+            echo "Valid platforms are: linux, windows, macos-intel, macos-arm, all"
+            exit 1
+            ;;
+    esac
+}
+
+# Function to validate release type
+validate_release_type() {
+    local type=$1
+    case $type in
+        production|beta|alpha)
+            return 0
+            ;;
+        *)
+            echo -e "${RED}Error: Invalid release type '$type'${NC}"
+            echo "Valid types are: production, beta, alpha"
+            exit 1
+            ;;
+    esac
+}
+
+# Function to get current version from version.txt
+get_current_version() {
+    if [ ! -f "version.txt" ]; then
+        echo "0.0.1"
+    else
+        cat version.txt | tr -d '\n'
+    fi
+}
+
 # Function to increment version
 increment_version() {
     local version=$1
@@ -20,188 +74,62 @@ increment_version() {
     echo "0.$minor.$patch"
 }
 
-# Version file path
-VERSION_FILE="version.txt"
-
-# Create version file if it doesn't exist
-if [ ! -f "$VERSION_FILE" ]; then
-    echo "0.0.1" > "$VERSION_FILE"
-fi
-
-# Read current version from file
-current_version=$(cat "$VERSION_FILE")
-
-# Calculate new version
-new_version=$(increment_version "$current_version")
-
-# Update version file
-echo "$new_version" > "$VERSION_FILE"
-
-# Create new tag
-new_tag="v$new_version"
-
-# Check if tag already exists
-if git rev-parse "$new_tag" >/dev/null 2>&1; then
-    echo "Error: Tag $new_tag already exists"
-    exit 1
-fi
-
-# Ask for commit message
-read -p "Enter commit message (default: Release $new_tag): " commit_message
-commit_message=${commit_message:-"Release $new_tag"}
-
-# Stage all changes
-git add .
-
-# Stage version.txt
-git add "$VERSION_FILE"
-
-# Commit changes
-git commit -m "$commit_message"
-
-# Create and push tag
-git tag -a "$new_tag" -m "Version $new_version"
-git push origin main --tags
-
-echo "Successfully created and pushed version $new_tag"
-echo "To trigger a GitHub release build:"
-echo "1. Go to GitHub Actions"
-echo "2. Select 'Release' workflow"
-echo "3. Click 'Run workflow'"
-echo "4. Select the platform you want to build for"
-echo "5. Click 'Run workflow' to start the build"
-
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
-
-# Read current version
-VERSION=$(cat version.txt | tr -d '\n')
-
-# Function to display help message
-show_help() {
-    echo -e "${GREEN}NST Release Script${NC}"
-    echo "Usage: $0 [options]"
-    echo ""
-    echo "Options:"
-    echo "  -p, --platform     Platform to build for (linux, windows, macos-intel, macos-arm, all)"
-    echo "  -v, --version      Version to release (current: $VERSION)"
-    echo "  -t, --type         Release type (production, beta, alpha)"
-    echo "  -h, --help         Show this help message"
-    echo ""
-    echo "Examples:"
-    echo "  $0 --platform linux --version 1.0.0"
-    echo "  $0 -p windows -v 1.0.1 -t beta"
-    echo "  $0 -p all -v 1.0.2 -t production"
-}
-
-# Function to validate version format
-validate_version() {
-    local version=$1
-    if [[ ! $version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-        echo -e "${RED}Error: Invalid version format. Must be in format X.Y.Z${NC}"
-        exit 1
-    fi
-}
-
-# Function to validate platform
-validate_platform() {
-    local platform=$1
-    case $platform in
-        linux|windows|macos-intel|macos-arm|all)
-            return 0
-            ;;
-        *)
-            echo -e "${RED}Error: Invalid platform. Must be one of: linux, windows, macos-intel, macos-arm, all${NC}"
-            exit 1
-            ;;
-    esac
-}
-
-# Function to validate release type
-validate_release_type() {
-    local type=$1
-    case $type in
-        production|beta|alpha)
-            return 0
-            ;;
-        *)
-            echo -e "${RED}Error: Invalid release type. Must be one of: production, beta, alpha${NC}"
-            exit 1
-            ;;
-    esac
-}
-
 # Default values
 PLATFORM=""
-NEW_VERSION=""
 RELEASE_TYPE="production"
 
 # Parse command line arguments
-while [[ $# -gt 0 ]]; do
-    case $1 in
-        -p|--platform)
-            PLATFORM="$2"
-            shift 2
+while getopts "p:t:h" opt; do
+    case $opt in
+        p)
+            PLATFORM=$OPTARG
+            validate_platform "$PLATFORM"
             ;;
-        -v|--version)
-            NEW_VERSION="$2"
-            shift 2
+        t)
+            RELEASE_TYPE=$OPTARG
+            validate_release_type "$RELEASE_TYPE"
             ;;
-        -t|--type)
-            RELEASE_TYPE="$2"
-            shift 2
-            ;;
-        -h|--help)
+        h)
             show_help
             exit 0
             ;;
-        *)
-            echo -e "${RED}Error: Unknown option $1${NC}"
+        \?)
+            echo "Invalid option: -$OPTARG" >&2
             show_help
             exit 1
             ;;
     esac
 done
 
-# Validate required arguments
+# Check if platform is provided
 if [ -z "$PLATFORM" ]; then
     echo -e "${RED}Error: Platform is required${NC}"
     show_help
     exit 1
 fi
 
-# Validate platform
-validate_platform "$PLATFORM"
+# Get current version and calculate new version
+CURRENT_VERSION=$(get_current_version)
+NEW_VERSION=$(increment_version "$CURRENT_VERSION")
 
-# Validate release type
-validate_release_type "$RELEASE_TYPE"
-
-# If version is provided, validate and update version.txt
-if [ ! -z "$NEW_VERSION" ]; then
-    validate_version "$NEW_VERSION"
-    echo "$NEW_VERSION" > version.txt
-    echo -e "${GREEN}Updated version to $NEW_VERSION${NC}"
-    VERSION=$NEW_VERSION
-else
-    VERSION=$(cat version.txt | tr -d '\n')
-fi
+# Update version.txt
+echo "$NEW_VERSION" > version.txt
+echo -e "${GREEN}Updated version to $NEW_VERSION${NC}"
 
 # Stage and commit version changes
 git add version.txt
-git commit -m "Update version to $VERSION"
+git commit -m "Release v$NEW_VERSION"
 git push origin main
 
 # Create and push tag
-echo -e "${YELLOW}Creating git tag v$VERSION${NC}"
-if ! git rev-parse "v$VERSION" >/dev/null 2>&1; then
-    git tag -a "v$VERSION" -m "Release v$VERSION"
-    git push origin "v$VERSION"
-    echo -e "${GREEN}Successfully created and pushed version v$VERSION${NC}"
+echo -e "${YELLOW}Creating git tag v$NEW_VERSION${NC}"
+if ! git rev-parse "v$NEW_VERSION" >/dev/null 2>&1; then
+    git tag -a "v$NEW_VERSION" -m "Release v$NEW_VERSION
+platform: $PLATFORM"
+    git push origin "v$NEW_VERSION"
+    echo -e "${GREEN}Successfully created and pushed version v$NEW_VERSION${NC}"
 else
-    echo -e "${YELLOW}Tag v$VERSION already exists, skipping tag creation${NC}"
+    echo -e "${YELLOW}Tag v$NEW_VERSION already exists, skipping tag creation${NC}"
 fi
 
 echo -e "${GREEN}GitHub Actions workflow will automatically build for platform: $PLATFORM${NC}"
