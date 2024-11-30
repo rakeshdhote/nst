@@ -103,7 +103,14 @@ jobs:
             libcairo2-dev \
             libsoup-3.0-dev \
             libsoup-3.0 \
+            libjavascriptcoregtk-4.1-dev \
+            libwebkit2gtk-4.1-dev \
             patchelf
+
+      # Set PKG_CONFIG_PATH for system libraries
+      - name: Set PKG_CONFIG_PATH
+        run: |
+          echo "PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/share/pkgconfig" >> $GITHUB_ENV
 
       # Install project dependencies using pnpm
       - name: Install dependencies
@@ -302,11 +309,18 @@ jobs:
         run: |
           if [[ "${{ env.ENABLE_CODE_SIGNING }}" == "true" ]]; then
             if [[ -n "${{ env.AZURE_KEY_VAULT_URI }}" ]]; then
-              pnpm tauri build --target x86_64-pc-windows-msvc
+              pnpm tauri build
             else
-              pnpm tauri build --target x86_64-pc-windows-msvc -- --sign-with-params="/a /f windows-cert.pfx /p ${{ env.WINDOWS_SIGN_CERT_PASSWORD }}"
+              echo "${{ env.WINDOWS_SIGN_CERT }}" > windows-cert.b64
+              certutil -decode windows-cert.b64 windows-cert.pfx
+              pnpm tauri build -- --config "tauri.conf.windows.json"
             fi
           else
-            pnpm tauri build --target x86_64-pc-windows-msvc
+            pnpm tauri build
           fi
         shell: bash
+        env:
+          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          ENABLE_CODE_SIGNING: ${{ env.ENABLE_CODE_SIGNING }}
