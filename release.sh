@@ -196,10 +196,14 @@ git push origin main
 
 # Create and push tag
 echo -e "${YELLOW}Creating git tag v$VERSION${NC}"
-git tag -a "v$VERSION" -m "Release v$VERSION"
-git push origin "v$VERSION"
+if ! git rev-parse "v$VERSION" >/dev/null 2>&1; then
+    git tag -a "v$VERSION" -m "Release v$VERSION"
+    git push origin "v$VERSION"
+    echo -e "${GREEN}Successfully created and pushed version v$VERSION${NC}"
+else
+    echo -e "${YELLOW}Tag v$VERSION already exists, skipping tag creation${NC}"
+fi
 
-echo -e "${GREEN}Successfully created and pushed version v$VERSION${NC}"
 echo -e "${GREEN}GitHub Actions workflow will automatically build for Windows${NC}"
 
 # Function to trigger GitHub workflow
