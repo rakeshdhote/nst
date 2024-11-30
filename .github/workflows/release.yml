@@ -82,9 +82,16 @@ jobs:
         run: pnpm install
 
       - name: Build Next.js app
-        run: |
-          pnpm run build
-          ls -la out/
+        run: pnpm run build
+
+      - name: List output directory (Unix)
+        if: runner.os != 'Windows'
+        run: ls -la out/
+
+      - name: List output directory (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: Get-ChildItem -Path out/ -Force
 
       - name: Build the app
         uses: tauri-apps/tauri-action@v0
