@@ -299,8 +299,16 @@ jobs:
             echo "Using Azure Key Vault for signing"
           elif [[ -n "${{ env.WINDOWS_SIGN_CERT }}" ]]; then
             echo "Using local certificate for signing"
+            # Clean up any existing files
+            rm -f windows-cert.b64 windows-cert.pfx
+            # Create and decode certificate
             echo "${{ env.WINDOWS_SIGN_CERT }}" > windows-cert.b64
             certutil -decode windows-cert.b64 windows-cert.pfx
+            # Verify certificate exists
+            if [ ! -f windows-cert.pfx ]; then
+              echo "Failed to create certificate file"
+              exit 1
+            fi
           fi
         shell: bash
 
@@ -311,8 +319,10 @@ jobs:
             if [[ -n "${{ env.AZURE_KEY_VAULT_URI }}" ]]; then
               pnpm tauri build
             else
-              echo "${{ env.WINDOWS_SIGN_CERT }}" > windows-cert.b64
-              certutil -decode windows-cert.b64 windows-cert.pfx
+              if [ ! -f windows-cert.pfx ]; then
+                echo "Certificate file not found"
+                exit 1
+              fi
               pnpm tauri build -- --config "tauri.conf.windows.json"
             fi
           else
@@ -324,3 +334,11 @@ jobs:
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           ENABLE_CODE_SIGNING: ${{ env.ENABLE_CODE_SIGNING }}
+          WINDOWS_SIGN_CERT_PASSWORD: ${{ secrets.WINDOWS_SIGN_CERT_PASSWORD }}
+
+      # Clean up sensitive files
+      - name: Clean up certificates
+        if: always()
+        run: |
+          rm -f windows-cert.b64 windows-cert.pfx
+        shell: bash
