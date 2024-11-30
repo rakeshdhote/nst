@@ -34,7 +34,7 @@ export default function Home() {
               onClick={handleWriteMessage}
               className="w-full"
             >
-              Write Message
+              Write Message ...
             </Button>
 
             {message && (
