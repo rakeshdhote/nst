@@ -59,6 +59,23 @@ pnpm run tauri signer generate -- -w ~/.tauri/myapp.key
 # CERTIFICATE_NAME: Name of your certificate in Key Vault
 # TAURI_PRIVATE_KEY: Your Tauri update key
 # TAURI_KEY_PASSWORD: Password for the Tauri key
+
+# or generate local certificate
+# For Windows builds:
+# If you want to sign the Windows builds, you'll need to set up one of these options in your repository secrets:
+# Option 1: Local Certificate
+# WINDOWS_SIGN_CERT: Base64-encoded PFX certificate
+# WINDOWS_SIGN_CERT_PASSWORD: Certificate password
+# For detailed instructions on generating Windows certificates,
+# see docs/windows-signing-setup.md
+
+# Option 2: Azure Key Vault
+# AZURE_KEY_VAULT_URI
+# AZURE_CLIENT_ID
+# AZURE_TENANT_ID
+# AZURE_CLIENT_SECRET
+
+# For detailed instructions on setting up Azure Key Vault for code signing,
+# see docs/azure-signing-setup.md
+
 ###################
-
-
