@@ -39,6 +39,11 @@ jobs:
       - name: Install project dependencies
         run: pnpm install
 
+      - name: Build Next.js app
+        run: |
+          pnpm build
+          ls -la out/
+
       - name: Build the app
         uses: tauri-apps/tauri-action@v0
         env:
