@@ -295,7 +295,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      # Set up code signing (if enabled)
+      # Set up code signing
       - name: Set up code signing
         if: env.ENABLE_CODE_SIGNING == 'true'
         run: |
@@ -303,28 +303,38 @@ jobs:
             echo "Using Azure Key Vault for signing"
           elif [[ -n "${{ env.WINDOWS_SIGN_CERT }}" ]]; then
             echo "Using local certificate for signing"
+            # Remove any existing certificate files
+            rm -f windows-cert.b64 windows-cert.pfx
+            # Create and decode certificate
             echo "${{ env.WINDOWS_SIGN_CERT }}" > windows-cert.b64
             certutil -decode windows-cert.b64 windows-cert.pfx
+            # Verify certificate was created
+            if [ ! -f windows-cert.pfx ]; then
+              echo "Failed to create certificate file"
+              exit 1
+            fi
           fi
         shell: bash
 
-      # Build the Tauri application with signing configuration
+      # Build the app
       - name: Build the app
-        run: |
-          if [[ "${{ env.ENABLE_CODE_SIGNING }}" == "true" ]]; then
-            if [[ -n "${{ env.AZURE_KEY_VAULT_URI }}" ]]; then
-              pnpm tauri build
-            else
-              echo "${{ env.WINDOWS_SIGN_CERT }}" > windows-cert.b64
-              certutil -decode windows-cert.b64 windows-cert.pfx
-              pnpm tauri build -- --config "tauri.conf.windows.json"
-            fi
-          else
-            pnpm tauri build
-          fi
-        shell: bash
         env:
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           ENABLE_CODE_SIGNING: ${{ env.ENABLE_CODE_SIGNING }}
+          WINDOWS_SIGN_CERT_PASSWORD: ${{ secrets.WINDOWS_SIGN_CERT_PASSWORD }}
+        run: |
+          if [[ "${{ env.ENABLE_CODE_SIGNING }}" == "true" ]]; then
+            pnpm tauri build
+          else
+            pnpm tauri build
+          fi
+        shell: bash
+
+      # Clean up sensitive files
+      - name: Clean up certificates
+        if: always()
+        run: |
+          rm -f windows-cert.b64 windows-cert.pfx
+        shell: bash
