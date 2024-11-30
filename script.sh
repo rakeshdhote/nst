@@ -41,3 +41,24 @@ git push origin v0.0.1
 # https://thatgurjot.com/til/tauri-auto-updater/
 pnpm run tauri signer generate -- -w ~/.tauri/myapp.key
 # create .env
+
+###################
+# github actions windows
+# Error: microsoft defender smartscreen prevented an unrecognized app from starting 
+# created windows-build.yml
+# Set up code signing using Azure Key Vault:
+# Create an Azure account if you don't have one
+# Create a Key Vault in Azure
+# Generate or import a code signing certificate
+# Create an App Registration in Azure AD for authentication
+# Add these secrets to your GitHub repository:
+# AZURE_KEY_VAULT_URI: Your Azure Key Vault URI
+# AZURE_CLIENT_ID: App Registration client ID
+# AZURE_TENANT_ID: Azure tenant ID
+# AZURE_CLIENT_SECRET: App Registration client secret
+# CERTIFICATE_NAME: Name of your certificate in Key Vault
+# TAURI_PRIVATE_KEY: Your Tauri update key
+# TAURI_KEY_PASSWORD: Password for the Tauri key
+###################
+
+

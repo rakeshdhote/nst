@@ -1,0 +1,23 @@
+{
+    "version": "v0.1.0", 
+    "notes": "Your Release Notes go here", 
+    "pub_date": "2024-11-08T19:25:57Z", 
+    "platforms": {
+      "darwin-x86_64": {
+        "signature": "Content of app.tar.gz.sig", 
+        "url": "https://github.com/rakeshdhote/nst/releases/download/v0.0.1/app-x86_64.app.tar.gz" 
+      },
+      "darwin-aarch64": {
+        "signature": "Content of app.tar.gz.sig",
+        "url": "https://github.com/rakeshdhote/nst/releases/download/v0.0.1/app-aarch64.app.tar.gz"
+      },
+      "linux-x86_64": {
+        "signature": "Content of app.AppImage.tar.gz.sig",
+        "url": "https://github.com/rakeshdhote/nst/releases/download/untagged-a323c9966a05582e5b5e/nst_0.1.0_amd64.deb"
+      },
+      "windows-x86_64": {
+        "signature": "Content of app-setup.nsis.sig or app.msi.sig, depending on the chosen format",
+        "url": "https://github.com/rakeshdhote/nst/releases/download/untagged-a323c9966a05582e5b5e/nst_0.1.0_x64-setup.exe"
+      }
+    }
+  }

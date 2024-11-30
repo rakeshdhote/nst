@@ -114,4 +114,4 @@ jobs:
           releaseBody: "See the assets to download this version and install."
           includeUpdaterJson: true # this will include the latest.json file in the release
           releaseDraft: true
-          prerelease: false
+          prerelease: true
