@@ -184,16 +184,23 @@ if [ ! -z "$NEW_VERSION" ]; then
     validate_version "$NEW_VERSION"
     echo "$NEW_VERSION" > version.txt
     echo -e "${GREEN}Updated version to $NEW_VERSION${NC}"
+    VERSION=$NEW_VERSION
+else
+    VERSION=$(cat version.txt | tr -d '\n')
 fi
 
-# Ensure we're in the root directory of the project
-if [ ! -f "version.txt" ]; then
-    echo -e "${RED}Error: Must be run from project root directory${NC}"
-    exit 1
-fi
+# Stage and commit version changes
+git add version.txt
+git commit -m "Update version to $VERSION"
+git push origin main
 
-# Read the current version again (in case it was updated)
-VERSION=$(cat version.txt | tr -d '\n')
+# Create and push tag
+echo -e "${YELLOW}Creating git tag v$VERSION${NC}"
+git tag -a "v$VERSION" -m "Release v$VERSION"
+git push origin "v$VERSION"
+
+echo -e "${GREEN}Successfully created and pushed version v$VERSION${NC}"
+echo -e "${GREEN}GitHub Actions workflow will automatically build for Windows${NC}"
 
 # Function to trigger GitHub workflow
 trigger_workflow() {
@@ -229,11 +236,6 @@ trigger_workflow() {
         exit 1
     fi
 }
-
-# Create git tag
-echo -e "${YELLOW}Creating git tag v$VERSION${NC}"
-git tag -a "v$VERSION" -m "Release v$VERSION"
-git push origin "v$VERSION"
 
 # Trigger workflows based on platform
 if [ "$PLATFORM" = "all" ]; then
