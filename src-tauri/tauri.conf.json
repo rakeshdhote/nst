@@ -1,0 +1,40 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "productName": "nst",
+  "version": "0.1.0",
+  "identifier": "com.nst.dev",
+  "build": {
+    "frontendDist": "../out",
+    "devUrl": "http://localhost:3000",
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "nst",
+        "width": 800,
+        "height": 600,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png"
+    ]
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": ["https://github.com/rakeshdhote/nst/releases/latest/download/latest.json"],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEQ4QTc3MzU5MUY1RjVFRQpSV1R1OWZXUk5YZUtEYnIvSWRrYUg3Y1dsS3RpRDZZUXRLdkFMWDBPSTdqelN2Y2hxaEVZOWNZcwo="
+    }
+}
+}
