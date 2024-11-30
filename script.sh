@@ -2,6 +2,7 @@
 
 # nextjs
 npx create-next-app@latest
+npx create-next-app@latest my-project --typescript --tailwind --eslint --app-router
 
 #shadcn init
 pnpm dlx shadcn@latest init -d
