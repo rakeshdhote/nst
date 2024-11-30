@@ -2,11 +2,7 @@
 # It can be triggered either by pushing a tag or manually through the GitHub Actions UI
 name: Release
 on:
-  # Triggered when a tag starting with 'v' is pushed (e.g., v1.0.0)
-  push:
-    tags:
-      - 'v*'
-  # Allows manual triggering with platform selection
+  # Manual trigger with platform selection
   workflow_dispatch:
     inputs:
       platform:
@@ -18,9 +14,36 @@ on:
           - macos-intel
           - macos-arm
           - windows
+      auto_release:
+        description: 'Create automatic release'
+        type: boolean
+        default: false
+  # Optional automatic trigger on tag push (disabled by default)
+  push:
+    tags:
+      - 'v*'
+    paths-ignore:
+      - '**'  # Ignore all paths by default, requiring manual confirmation
 
 jobs:
+  check-auto-release:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    outputs:
+      should_release: ${{ steps.check.outputs.should_release }}
+    steps:
+      - id: check
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ github.event.inputs.auto_release }}" == "true" ]]; then
+            echo "should_release=true" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" =~ ^refs/tags/v ]]; then
+            echo "should_release=true" >> $GITHUB_OUTPUT
+          else
+            echo "should_release=false" >> $GITHUB_OUTPUT
+          fi
+
   build-linux:
+    needs: check-auto-release
     # Required for creating GitHub releases
     permissions:
       contents: write
@@ -28,8 +51,8 @@ jobs:
     runs-on: ubuntu-22.04
     # Run if: tag push OR workflow_dispatch with platform 'linux'
     if: >-
-      github.event_name == 'push' ||
-      (github.event_name == 'workflow_dispatch' && github.event.inputs.platform == 'linux')
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.platform == 'linux') ||
+      (needs.check-auto-release.outputs.should_release == 'true')
     steps:
       # Check out the repository code
       - name: Checkout repository
@@ -67,11 +90,18 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            libgtk-3-dev \
             libwebkit2gtk-4.0-dev \
-            libwebkit2gtk-4.1-dev \
-            libappindicator3-dev \
+            build-essential \
+            curl \
+            wget \
+            file \
+            libssl-dev \
+            libgtk-3-dev \
+            libayatana-appindicator3-dev \
             librsvg2-dev \
+            libgdk-pixbuf2.0-dev \
+            libgdk3.0-cil-dev \
+            libcairo2-dev \
             patchelf
 
       # Cache build outputs for both Next.js and Tauri
@@ -86,6 +116,7 @@ jobs:
             ${{ runner.os }}-build-
 
   build-macos-intel:
+    needs: check-auto-release
     # Required for creating GitHub releases
     permissions:
       contents: write
@@ -93,8 +124,8 @@ jobs:
     runs-on: macos-latest
     # Run if: tag push OR workflow_dispatch with platform 'macos-intel'
     if: >-
-      github.event_name == 'push' ||
-      (github.event_name == 'workflow_dispatch' && github.event.inputs.platform == 'macos-intel')
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.platform == 'macos-intel') ||
+      (needs.check-auto-release.outputs.should_release == 'true')
     steps:
       # Check out the repository code
       - name: Checkout repository
@@ -141,6 +172,7 @@ jobs:
             ${{ runner.os }}-build-
 
   build-macos-arm:
+    needs: check-auto-release
     # Required for creating GitHub releases
     permissions:
       contents: write
@@ -148,8 +180,8 @@ jobs:
     runs-on: macos-latest
     # Run if: tag push OR workflow_dispatch with platform 'macos-arm'
     if: >-
-      github.event_name == 'push' ||
-      (github.event_name == 'workflow_dispatch' && github.event.inputs.platform == 'macos-arm')
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.platform == 'macos-arm') ||
+      (needs.check-auto-release.outputs.should_release == 'true')
     steps:
       # Check out the repository code
       - name: Checkout repository
@@ -196,6 +228,7 @@ jobs:
             ${{ runner.os }}-build-
 
   build-windows:
+    needs: check-auto-release
     # Required for creating GitHub releases
     permissions:
       contents: write
@@ -203,8 +236,8 @@ jobs:
     runs-on: windows-latest
     # Run if: tag push OR workflow_dispatch with platform 'windows'
     if: >-
-      github.event_name == 'push' ||
-      (github.event_name == 'workflow_dispatch' && github.event.inputs.platform == 'windows')
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.platform == 'windows') ||
+      (needs.check-auto-release.outputs.should_release == 'true')
     steps:
       # Check out the repository code
       - name: Checkout repository
