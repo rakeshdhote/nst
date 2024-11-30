@@ -20,36 +20,45 @@ increment_version() {
     echo "0.$minor.$patch"
 }
 
-# Get the latest tag
-latest_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
-latest_version=${latest_tag#v}  # Remove 'v' prefix
+# Version file path
+VERSION_FILE="version.txt"
+
+# Create version file if it doesn't exist
+if [ ! -f "$VERSION_FILE" ]; then
+    echo "0.0.1" > "$VERSION_FILE"
+fi
+
+# Read current version from file
+current_version=$(cat "$VERSION_FILE")
 
 # Calculate new version
-new_version=$(increment_version $latest_version)
+new_version=$(increment_version "$current_version")
+
+# Update version file
+echo "$new_version" > "$VERSION_FILE"
+
+# Create new tag
 new_tag="v$new_version"
 
-# Ask for commit message
-echo "Enter commit message:"
-read commit_msg
-
-if [ -z "$commit_msg" ]; then
-    echo "Commit message cannot be empty"
+# Check if tag already exists
+if git rev-parse "$new_tag" >/dev/null 2>&1; then
+    echo "Error: Tag $new_tag already exists"
     exit 1
 fi
 
-# Update version in package.json
-sed -i "s/\"version\": \".*\"/\"version\": \"$new_version\"/" package.json
-sed -i "s/\"version\": \".*\"/\"version\": \"$new_version\"/" src-tauri/tauri.conf.json
+# Ask for commit message
+read -p "Enter commit message (default: Release $new_tag): " commit_message
+commit_message=${commit_message:-"Release $new_tag"}
 
-# Stage, commit and push
-git add .
-git commit -m "$commit_msg"
-git push origin main
+# Stage version.txt
+git add "$VERSION_FILE"
 
-# Create and push new tag
-echo "Creating new tag: $new_tag"
-git tag $new_tag
-git push origin $new_tag
+# Commit changes
+git commit -m "$commit_message"
+
+# Create and push tag
+git tag -a "$new_tag" -m "Version $new_version"
+git push origin main --tags
 
 echo "Successfully created and pushed version $new_tag"
 echo "GitHub Actions workflow will start automatically"
