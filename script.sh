@@ -60,6 +60,16 @@ pnpm run tauri signer generate -- -w ~/.tauri/myapp.key
 # TAURI_PRIVATE_KEY: Your Tauri update key
 # TAURI_KEY_PASSWORD: Password for the Tauri key
 
+# For macOS builds:
+# Required secrets for notarization:
+# APPLE_CERTIFICATE: Base64 encoded Developer ID certificate
+# APPLE_CERTIFICATE_PASSWORD: Certificate password
+# APPLE_ID: Your Apple ID email
+# APPLE_TEAM_ID: Your Team ID
+# APPLE_PASSWORD: App-specific password
+# For detailed instructions on macOS notarization,
+# see docs/macos-notarization-setup.md
+
 # or generate local certificate
 # For Windows builds:
 # If you want to sign the Windows builds, you'll need to set up one of these options in your repository secrets:
