@@ -59,9 +59,9 @@ jobs:
     # Use the latest Ubuntu environment
     runs-on: ubuntu-22.04
     # Run if: tag push OR workflow_dispatch with platform 'linux'
-    if: >-
-      (github.event_name == 'workflow_dispatch' && (github.event.inputs.platform == 'linux' || github.event.inputs.platform == 'all')) ||
-      (github.event_name == 'push' && needs.check-auto-release.outputs.should_release == 'true')
+    if: |
+      needs.check-auto-release.outputs.should_release == 'true' &&
+      (github.event.inputs.platform == 'all' || github.event.inputs.platform == 'linux')
     steps:
       # Check out the repository code
       - name: Checkout repository
@@ -141,9 +141,9 @@ jobs:
     # Use the latest macOS environment
     runs-on: macos-latest
     # Run if: tag push OR workflow_dispatch with platform 'macos-intel'
-    if: >-
-      (github.event_name == 'workflow_dispatch' && (github.event.inputs.platform == 'macos-intel' || github.event.inputs.platform == 'all')) ||
-      (github.event_name == 'push' && needs.check-auto-release.outputs.should_release == 'true')
+    if: |
+      needs.check-auto-release.outputs.should_release == 'true' &&
+      (github.event.inputs.platform == 'all' || github.event.inputs.platform == 'macos-intel')
     steps:
       # Check out the repository code
       - name: Checkout repository
@@ -199,9 +199,9 @@ jobs:
     # Use the latest macOS environment
     runs-on: macos-latest
     # Run if: tag push OR workflow_dispatch with platform 'macos-arm'
-    if: >-
-      (github.event_name == 'workflow_dispatch' && (github.event.inputs.platform == 'macos-arm' || github.event.inputs.platform == 'all')) ||
-      (github.event_name == 'push' && needs.check-auto-release.outputs.should_release == 'true')
+    if: |
+      needs.check-auto-release.outputs.should_release == 'true' &&
+      (github.event.inputs.platform == 'all' || github.event.inputs.platform == 'macos-arm')
     steps:
       # Check out the repository code
       - name: Checkout repository
@@ -254,9 +254,9 @@ jobs:
     permissions:
       contents: write
     runs-on: windows-latest
-    if: >-
-      (github.event_name == 'workflow_dispatch' && (github.event.inputs.platform == 'windows' || github.event.inputs.platform == 'all')) ||
-      (github.event_name == 'push' && needs.check-auto-release.outputs.should_release == 'true')
+    if: |
+      needs.check-auto-release.outputs.should_release == 'true' &&
+      (github.event.inputs.platform == 'all' || github.event.inputs.platform == 'windows')
     env:
       ENABLE_CODE_SIGNING: ${{ secrets.WINDOWS_SIGN_CERT != '' }}
       WINDOWS_SIGN_CERT: ${{ secrets.WINDOWS_SIGN_CERT }}
