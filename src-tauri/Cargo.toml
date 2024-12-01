@@ -5,7 +5,7 @@
 # Rust code in your app.
 
 [package]
-name = "nst"
+name = "tauri2-next-shadcn-python-template"
 version = "0.1.0"
 description = "NSR Technologies App"
 authors = ["NSR Technologies"]

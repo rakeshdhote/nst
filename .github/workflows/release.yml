@@ -187,235 +187,115 @@ jobs:
 
   build-macos-intel:
     if: github.event_name == 'workflow_dispatch' && (github.event.inputs.platform == 'macos-intel' || github.event.inputs.platform == 'all')
-    # Required for creating GitHub releases
     permissions:
       contents: write
-    # Use the latest macOS environment
     runs-on: macos-latest
     steps:
-      # Check out the repository code
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      # Install and configure pnpm package manager
+      - uses: actions/checkout@v3
+      
       - name: Install pnpm
         uses: pnpm/action-setup@v2
         with:
           version: latest
-
-      # Set up Node.js environment with caching
+          
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'pnpm'
-
-      # Install Rust toolchain
+          
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: x86_64-apple-darwin
-
-      # Install project dependencies using pnpm
-      - name: Install dependencies
-        shell: bash
-        run: |
-          if ! pnpm install; then
-            echo "Failed to install project dependencies"
-            exit 1
-          fi
-
-      # Set up Python
-      - name: Set up Python
+        
+      - name: Install Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-          cache: 'pip'
-
-      # Install Python dependencies
+          
       - name: Install Python dependencies
-        shell: bash
         run: |
-          if ! cd backend/python; then
-            echo "Failed to change directory to backend/python"
-            exit 1
-          fi
-          if ! pip install -r requirements.txt; then
-            echo "Failed to install Python dependencies"
-            exit 1
-          fi
-
-      # Build Python binary
-      - name: Build Python binary
-        shell: bash
-        run: |
-          if ! cd backend/python; then
-            echo "Failed to change directory to backend/python"
-            exit 1
-          fi
-          if ! pyinstaller --onefile --name fastapi_server main.py; then
-            echo "Failed to build Python binary"
-            exit 1
-          fi
-          if ! mkdir -p ../../src-tauri/resources; then
-            echo "Failed to create resources directory"
-            exit 1
-          fi
-          if ! cp dist/fastapi_server ../../src-tauri/resources/; then
-            echo "Failed to copy binary to target directory"
-            exit 1
-          fi
-
-      # Build the Tauri application
-      - name: Build Tauri App
-        uses: tauri-apps/tauri-action@v0
+          python -m pip install --upgrade pip
+          python -m pip install -r backend/python/requirements.txt
+          python -m pip install pyinstaller
+          
+      - name: Install frontend dependencies
+        run: pnpm install
+        
+      - name: Build Python
+        run: pwsh scripts/build-python.ps1
+        
+      - name: Import Certificate
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ENABLE_CODE_SIGNING: ${{ secrets.APPLE_SIGNING_IDENTITY != '' }}
-          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-        with:
-          tagName: v${{ github.event.inputs.version || '0.0.1' }}
-          releaseName: v${{ github.event.inputs.version || '0.0.1' }}
-          releaseBody: |
-            See the assets to download and install this version.
-            
-            Changes in this version:
-            - Release build
-          releaseDraft: false
-          prerelease: ${{ github.event.inputs.release_type != 'production' }}
-          includeUpdaterJson: true
-
-      # Cache build outputs for both Next.js and Tauri
-      - name: Cache Build Output
-        uses: actions/cache@v3
-        with:
-          path: |
-            out
-            src-tauri/target
-          key: ${{ runner.os }}-build-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-build-
+          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
+        run: |
+          echo $MACOS_CERTIFICATE | base64 --decode > certificate.p12
+          security create-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
+          security import certificate.p12 -k build.keychain -P "$MACOS_CERTIFICATE_PWD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
+        
+      - name: Build the app
+        env:
+          APPLE_CERTIFICATE_ID: ${{ secrets.APPLE_CERTIFICATE_ID }}
+        run: pnpm tauri build
 
   build-macos-arm:
     if: github.event_name == 'workflow_dispatch' && (github.event.inputs.platform == 'macos-arm' || github.event.inputs.platform == 'all')
-    # Required for creating GitHub releases
     permissions:
       contents: write
-    # Use the latest macOS environment
     runs-on: macos-latest-xlarge
     steps:
-      # Check out the repository code
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      # Install and configure pnpm package manager
+      - uses: actions/checkout@v3
+      
       - name: Install pnpm
         uses: pnpm/action-setup@v2
         with:
           version: latest
-
-      # Set up Node.js environment with caching
+          
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'pnpm'
-
-      # Install Rust toolchain
+          
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: aarch64-apple-darwin
-
-      # Install project dependencies using pnpm
-      - name: Install dependencies
-        shell: bash
-        run: |
-          if ! pnpm install; then
-            echo "Failed to install project dependencies"
-            exit 1
-          fi
-
-      # Set up Python
-      - name: Set up Python
+        
+      - name: Install Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-          cache: 'pip'
-
-      # Install Python dependencies
+          
       - name: Install Python dependencies
-        shell: bash
         run: |
-          if ! cd backend/python; then
-            echo "Failed to change directory to backend/python"
-            exit 1
-          fi
-          if ! pip install -r requirements.txt; then
-            echo "Failed to install Python dependencies"
-            exit 1
-          fi
-
-      # Build Python binary
-      - name: Build Python binary
-        shell: bash
-        run: |
-          if ! cd backend/python; then
-            echo "Failed to change directory to backend/python"
-            exit 1
-          fi
-          if ! pyinstaller --onefile --name fastapi_server main.py; then
-            echo "Failed to build Python binary"
-            exit 1
-          fi
-          if ! mkdir -p ../../src-tauri/resources; then
-            echo "Failed to create resources directory"
-            exit 1
-          fi
-          if ! cp dist/fastapi_server ../../src-tauri/resources/; then
-            echo "Failed to copy binary to target directory"
-            exit 1
-          fi
-
-      # Build the Tauri application
-      - name: Build Tauri App
-        uses: tauri-apps/tauri-action@v0
+          python -m pip install --upgrade pip
+          python -m pip install -r backend/python/requirements.txt
+          python -m pip install pyinstaller
+          
+      - name: Install frontend dependencies
+        run: pnpm install
+        
+      - name: Build Python
+        run: pwsh scripts/build-python.ps1
+        
+      - name: Import Certificate
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ENABLE_CODE_SIGNING: ${{ secrets.APPLE_SIGNING_IDENTITY != '' }}
-          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-        with:
-          tagName: v${{ github.event.inputs.version || '0.0.1' }}
-          releaseName: v${{ github.event.inputs.version || '0.0.1' }}
-          releaseBody: |
-            See the assets to download and install this version.
-            
-            Changes in this version:
-            - Release build
-          releaseDraft: false
-          prerelease: ${{ github.event.inputs.release_type != 'production' }}
-          includeUpdaterJson: true
-
-      # Cache build outputs for both Next.js and Tauri
-      - name: Cache Build Output
-        uses: actions/cache@v3
-        with:
-          path: |
-            out
-            src-tauri/target
-          key: ${{ runner.os }}-build-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-build-
+          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
+        run: |
+          echo $MACOS_CERTIFICATE | base64 --decode > certificate.p12
+          security create-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
+          security import certificate.p12 -k build.keychain -P "$MACOS_CERTIFICATE_PWD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
+        
+      - name: Build the app
+        env:
+          APPLE_CERTIFICATE_ID: ${{ secrets.APPLE_CERTIFICATE_ID }}
+        run: pnpm tauri build
 
   build-windows:
     if: github.event_name == 'workflow_dispatch' && (github.event.inputs.platform == 'windows' || github.event.inputs.platform == 'all')
@@ -423,44 +303,39 @@ jobs:
       contents: write
     runs-on: windows-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install Node.js
+      - uses: actions/checkout@v3
+      
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: latest
+          
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
-
+          cache: 'pnpm'
+          
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        
       - name: Install Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-          cache: 'pip'
-
-      - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Install frontend dependencies
-        run: npm install
-
+          
       - name: Install Python dependencies
         run: |
+          cd ${{ github.workspace }}
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
+          python -m pip install -r backend/python/requirements.txt
+          python -m pip install pyinstaller
+          
+      - name: Install frontend dependencies
+        run: pnpm install
+        
+      - name: Build Python
+        run: pwsh scripts/build-python.ps1
+        
       - name: Build the app
-        uses: tauri-apps/tauri-action@v0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ENABLE_CODE_SIGNING: ${{ secrets.WINDOWS_SIGN_CERT != '' }}
-          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
-          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
-          WINDOWS_SIGN_CERT: ${{ secrets.WINDOWS_SIGN_CERT }}
-          WINDOWS_SIGN_CERT_PASSWORD: ${{ secrets.WINDOWS_SIGN_CERT_PASSWORD }}
-        with:
-          tagName: ${{ github.ref_name }}
-          releaseName: 'NST v__VERSION__'
-          releaseBody: 'See the assets to download and install this version.'
-          releaseDraft: true
-          prerelease: false
-          args: --verbose
+        run: pnpm tauri build
