@@ -5,10 +5,10 @@
 # Rust code in your app.
 
 [package]
-name = "tauri2-next-shadcn-python-template"
-version = "0.0.1"
-description = "Tauri2 Next Shadcn Python Template"
-authors = ["NSR Tech. Inc."]
+name = "nst"
+version = "0.1.0"
+description = "NSR Technologies App"
+authors = ["NSR Technologies"]
 license = ""
 repository = ""
 edition = "2021"
@@ -29,7 +29,7 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 # The `build-dependencies` section is used to specify the dependencies that are
 # used by the `tauri build` command.
 [build-dependencies]
-tauri-build = { version = "2.0.2", features = [] }
+tauri-build = { version = "2.0.0-alpha", features = [] }
 
 # The `dependencies` section is used to specify the dependencies that are used
 # by your app. These dependencies are used by the `tauri build` command when
@@ -42,8 +42,14 @@ serde = { version = "1.0", features = ["derive"] }
 # The `log` crate is used to log data.
 log = "0.4"
 # The `tauri` crate is used to build the executable for your app.
-tauri = { version = "2.1.0", features = [] }
+tauri = { version = "2.0.0-alpha", features = [] }
 # The `tauri-plugin-log` crate is used to log data.
 tauri-plugin-log = "2.0.0-rc"
 # The `tauri-plugin-updater` crate is used to update the app.
 tauri-plugin-updater = "2.0.2"
+
+[target.'cfg(windows)'.dependencies]
+winapi = { version = "0.3", features = ["processthreadsapi", "handleapi"] }
+
+[features]
+custom-protocol = ["tauri/custom-protocol"]

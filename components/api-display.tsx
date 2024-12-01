@@ -1,7 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card"
+import { toast } from "sonner"
 
 interface ApiDisplayProps {
   type: "health" | "random"
@@ -21,6 +22,8 @@ type ApiResponse = HealthResponse | RandomResponse
 export function ApiDisplay({ type }: ApiDisplayProps) {
   const [data, setData] = useState<ApiResponse | null>(null)
   const [loading, setLoading] = useState(true)
+  const isFirstMount = useRef(true)
+  const previousNumber = useRef<number | null>(null)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -28,11 +31,31 @@ export function ApiDisplay({ type }: ApiDisplayProps) {
       try {
         const endpoint = type === "health" ? "/health" : "/random"
         const response = await fetch(`http://127.0.0.1:8000${endpoint}`)
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
         const result = await response.json()
         setData(result)
+        
+        // Show success toast only on first mount for health check
+        if (type === "health" && isFirstMount.current) {
+          toast.success(`Backend service is ${result.status}`)
+          isFirstMount.current = false
+        }
+        // For random numbers, only show toast if number changes
+        else if (type === "random" && result.number !== previousNumber.current) {
+          previousNumber.current = result.number
+          if (isFirstMount.current) {
+            toast.success(`Random number: ${result.number}`)
+            isFirstMount.current = false
+          }
+        }
       } catch (error) {
         console.error("Error fetching data:", error)
         setData(null)
+        toast.error(`Failed to fetch ${type} data`, {
+          description: error instanceof Error ? error.message : "Unknown error occurred",
+        })
       }
       setLoading(false)
     }
@@ -46,10 +69,13 @@ export function ApiDisplay({ type }: ApiDisplayProps) {
 
     return () => {
       if (interval) clearInterval(interval)
+      // Reset first mount flag when component unmounts
+      isFirstMount.current = true
+      previousNumber.current = null
     }
   }, [type])
 
-  if (loading) {
+  if (loading && !data) {
     return (
       <Card>
         <CardHeader>
@@ -100,13 +126,11 @@ export function ApiDisplay({ type }: ApiDisplayProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Random Number Generator</CardTitle>
-        <CardDescription>Generates a new random number every 5 seconds</CardDescription>
+        <CardTitle>Random Number</CardTitle>
+        <CardDescription>Generated random number from the Python backend</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="flex items-center justify-center">
-          <span className="text-4xl font-bold">{randomData.number}</span>
-        </div>
+        <div className="text-2xl font-bold text-center">{randomData.number}</div>
       </CardContent>
     </Card>
   )

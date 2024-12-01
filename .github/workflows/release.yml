@@ -2,7 +2,9 @@
 # It can be triggered either by pushing a tag or manually through the GitHub Actions UI
 name: Release
 on:
-  # Manual trigger with platform selection
+  push:
+    tags:
+      - 'v*'
   workflow_dispatch:
     inputs:
       platform:
@@ -422,132 +424,43 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: latest
-
-      - name: Setup Node
+      - name: Install Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
 
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      # Add Windows code signing certificate
-      - name: Import Windows Certificate
-        if: env.WINDOWS_SIGN_CERT != ''
-        env:
-          WINDOWS_SIGN_CERT: ${{ secrets.WINDOWS_SIGN_CERT }}
-          WINDOWS_SIGN_CERT_PASSWORD: ${{ secrets.WINDOWS_SIGN_CERT_PASSWORD }}
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = "Stop"
-          try {
-              # Create temporary directory for certificate
-              New-Item -ItemType Directory -Force -Path certificate
-              
-              # Write the base64 certificate content to a file
-              $certPath = "certificate\certificate.pfx"
-              [System.Convert]::FromBase64String($env:WINDOWS_SIGN_CERT) | Set-Content $certPath -AsByteStream
-              
-              # Import the certificate to the certificate store
-              $certPassword = ConvertTo-SecureString $env:WINDOWS_SIGN_CERT_PASSWORD -AsPlainText -Force
-              Import-PfxCertificate -FilePath $certPath -CertStoreLocation Cert:\CurrentUser\My -Password $certPassword
-              
-              # Clean up
-              Remove-Item -Path certificate -Recurse -Force
-          }
-          catch {
-              Write-Error "Failed to import certificate: $_"
-              exit 1
-          }
-
-      - name: Install project dependencies
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = "Stop"
-          try {
-              pnpm install
-              if ($LASTEXITCODE -ne 0) {
-                  throw "pnpm install failed"
-              }
-          }
-          catch {
-              Write-Error $_
-              exit 1
-          }
-
-      - name: Set up Python
+      - name: Install Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
           cache: 'pip'
 
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install frontend dependencies
+        run: npm install
+
       - name: Install Python dependencies
-        shell: pwsh
         run: |
-          $ErrorActionPreference = "Stop"
-          try {
-              Set-Location backend/python
-              pip install -r requirements.txt
-              if ($LASTEXITCODE -ne 0) {
-                  throw "pip install failed"
-              }
-          }
-          catch {
-              Write-Error $_
-              exit 1
-          }
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
-      - name: Build Python binary
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = "Stop"
-          try {
-              Set-Location backend/python
-              pyinstaller --onefile --name fastapi_server main.py
-              if ($LASTEXITCODE -ne 0) {
-                  throw "pyinstaller failed"
-              }
-              
-              New-Item -Path "../../src-tauri/resources" -ItemType Directory -Force
-              Copy-Item "dist/fastapi_server.exe" -Destination "../../src-tauri/resources/" -Force
-          }
-          catch {
-              Write-Error $_
-              exit 1
-          }
-
-      - name: Build Tauri App
+      - name: Build the app
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ENABLE_CODE_SIGNING: ${{ secrets.WINDOWS_SIGN_CERT != '' }}
+          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
           WINDOWS_SIGN_CERT: ${{ secrets.WINDOWS_SIGN_CERT }}
           WINDOWS_SIGN_CERT_PASSWORD: ${{ secrets.WINDOWS_SIGN_CERT_PASSWORD }}
         with:
-          tagName: v${{ github.event.inputs.version || '0.0.1' }}
-          releaseName: v${{ github.event.inputs.version || '0.0.1' }}
-          releaseBody: |
-            See the assets to download and install this version.
-            
-            Changes in this version:
-            - Release build
-          releaseDraft: false
-          prerelease: ${{ github.event.inputs.release_type != 'production' }}
-          includeUpdaterJson: true
-
-      - name: Cache Build Output
-        uses: actions/cache@v3
-        with:
-          path: |
-            out
-            src-tauri/target
-          key: ${{ runner.os }}-build-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-build-
+          tagName: ${{ github.ref_name }}
+          releaseName: 'NST v__VERSION__'
+          releaseBody: 'See the assets to download and install this version.'
+          releaseDraft: true
+          prerelease: false
+          args: --verbose
