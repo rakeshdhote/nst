@@ -100,6 +100,8 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
         with:
           tagName: v${{ github.event.inputs.version || '0.0.1' }}
           releaseName: v${{ github.event.inputs.version || '0.0.1' }}
@@ -163,6 +165,8 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
         with:
           tagName: v${{ github.event.inputs.version || '0.0.1' }}
           releaseName: v${{ github.event.inputs.version || '0.0.1' }}
@@ -226,6 +230,8 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
         with:
           tagName: v${{ github.event.inputs.version || '0.0.1' }}
           releaseName: v${{ github.event.inputs.version || '0.0.1' }}
@@ -251,36 +257,60 @@ jobs:
 
   build-windows:
     if: github.event_name == 'workflow_dispatch' && (github.event.inputs.platform == 'windows' || github.event.inputs.platform == 'all')
+    # Required for creating GitHub releases
     permissions:
       contents: write
-    runs-on: windows-latest
+    strategy:
+      matrix:
+        platform: [windows-latest]
+    runs-on: ${{ matrix.platform }}
     steps:
+      # Check out the repository code
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      # Install and configure pnpm package manager
       - name: Install pnpm
         uses: pnpm/action-setup@v2
         with:
           version: latest
 
+      # Set up Node.js environment with caching
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'pnpm'
 
+      # Install Rust toolchain
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
+      # Add Windows code signing certificate
+      - name: Import Windows Certificate
+        if: matrix.platform == 'windows-latest'
+        env:
+          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_SIGN_CERT }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_SIGN_CERT_PASSWORD }}
+        run: |
+          New-Item -ItemType directory -Path certificate
+          Set-Content -Path certificate/certificate.b64 -Value $env:WINDOWS_CERTIFICATE
+          certutil -decode certificate/certificate.b64 certificate/certificate.pfx
+          Remove-Item -Path certificate/certificate.b64
+
+      # Install project dependencies using pnpm
       - name: Install dependencies
         run: pnpm install
 
+      # Build the Tauri application
       - name: Build Tauri App
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          WINDOWS_CERTIFICATE_PATH: ${{ github.workspace }}/certificate/certificate.pfx
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_SIGN_CERT_PASSWORD }}
         with:
           tagName: v${{ github.event.inputs.version || '0.0.1' }}
           releaseName: v${{ github.event.inputs.version || '0.0.1' }}
@@ -293,6 +323,7 @@ jobs:
           prerelease: ${{ github.event.inputs.release_type != 'production' }}
           includeUpdaterJson: true
 
+      # Cache build outputs for both Next.js and Tauri
       - name: Cache Build Output
         uses: actions/cache@v3
         with:

@@ -88,6 +88,13 @@ public-key.*
 *_private_key*
 *_public_key*
 
+# Source code archives
+*.zip
+*.tar.gz
+src-*.zip
+src-*.tar.gz
+source-code.*
+
 # IDE
 .idea/
 .vscode/
