@@ -398,100 +398,107 @@ jobs:
 
   build-windows:
     if: github.event_name == 'workflow_dispatch' && (github.event.inputs.platform == 'windows' || github.event.inputs.platform == 'all')
-    # Required for creating GitHub releases
     permissions:
       contents: write
-    strategy:
-      matrix:
-        platform: [windows-latest]
-    runs-on: ${{ matrix.platform }}
+    runs-on: windows-latest
     steps:
-      # Check out the repository code
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Install and configure pnpm package manager
       - name: Install pnpm
         uses: pnpm/action-setup@v2
         with:
           version: latest
 
-      # Set up Node.js environment with caching
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'pnpm'
 
-      # Install Rust toolchain
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
       # Add Windows code signing certificate
       - name: Import Windows Certificate
-        if: matrix.platform == 'windows-latest'
+        if: env.WINDOWS_SIGN_CERT != ''
         env:
-          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_SIGN_CERT }}
-          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_SIGN_CERT_PASSWORD }}
+          WINDOWS_SIGN_CERT: ${{ secrets.WINDOWS_SIGN_CERT }}
+          WINDOWS_SIGN_CERT_PASSWORD: ${{ secrets.WINDOWS_SIGN_CERT_PASSWORD }}
+        shell: pwsh
         run: |
-          New-Item -ItemType directory -Path certificate
-          Set-Content -Path certificate/certificate.b64 -Value $env:WINDOWS_CERTIFICATE
-          certutil -decode certificate/certificate.b64 certificate/certificate.pfx
-          Remove-Item -Path certificate/certificate.b64
+          $ErrorActionPreference = "Stop"
+          try {
+              # Create temporary directory for certificate
+              New-Item -ItemType Directory -Force -Path certificate
+              
+              # Write the base64 certificate content to a file
+              $certPath = "certificate\certificate.pfx"
+              [System.Convert]::FromBase64String($env:WINDOWS_SIGN_CERT) | Set-Content $certPath -AsByteStream
+              
+              # Import the certificate to the certificate store
+              $certPassword = ConvertTo-SecureString $env:WINDOWS_SIGN_CERT_PASSWORD -AsPlainText -Force
+              Import-PfxCertificate -FilePath $certPath -CertStoreLocation Cert:\CurrentUser\My -Password $certPassword
+              
+              # Clean up
+              Remove-Item -Path certificate -Recurse -Force
+          }
+          catch {
+              Write-Error "Failed to import certificate: $_"
+              exit 1
+          }
 
-      # Install project dependencies using pnpm
-      - name: Install dependencies
+      - name: Install project dependencies
+        shell: pwsh
         run: |
-          if ! pnpm install; then
-            echo "Failed to install project dependencies"
-            exit 1
-          fi
+          $ErrorActionPreference = "Stop"
+          try {
+              pnpm install
+          }
+          catch {
+              Write-Error "Failed to install project dependencies"
+              exit 1
+          }
 
-      # Set up Python
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
           cache: 'pip'
 
-      # Install Python dependencies
       - name: Install Python dependencies
+        shell: pwsh
         run: |
-          if ! cd backend/python; then
-            echo "Failed to change directory to backend/python"
-            exit 1
-          fi
-          if ! pip install -r requirements.txt; then
-            echo "Failed to install Python dependencies"
-            exit 1
-          fi
+          $ErrorActionPreference = "Stop"
+          try {
+              cd backend/python
+              pip install -r requirements.txt
+          }
+          catch {
+              Write-Error "Failed to install Python dependencies"
+              exit 1
+          }
 
-      # Build Python binary
       - name: Build Python binary
+        shell: pwsh
         run: |
-          if ! cd backend/python; then
-            echo "Failed to change directory to backend/python"
-            exit 1
-          fi
-          if ! pyinstaller --onefile --name fastapi_server main.py; then
-            echo "Failed to build Python binary"
-            exit 1
-          fi
-          if ! mkdir -p ../../src-tauri/resources; then
-            echo "Failed to create resources directory"
-            exit 1
-          fi
-          if ! cp dist/fastapi_server ../../src-tauri/resources/; then
-            echo "Failed to copy binary to target directory"
-            exit 1
-          fi
+          $ErrorActionPreference = "Stop"
+          try {
+              cd backend/python
+              pyinstaller --onefile --name fastapi_server main.py
+              New-Item -Path "../../src-tauri/resources" -ItemType Directory -Force
+              Copy-Item "dist/fastapi_server.exe" -Destination "../../src-tauri/resources/" -Force
+          }
+          catch {
+              Write-Error "Failed to build Python binary"
+              exit 1
+          }
 
-      # Build the Tauri application
       - name: Build Tauri App
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ENABLE_CODE_SIGNING: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY != '' && secrets.WINDOWS_SIGN_CERT != '' }}
+          ENABLE_CODE_SIGNING: ${{ secrets.WINDOWS_SIGN_CERT != '' }}
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
           WINDOWS_SIGN_CERT: ${{ secrets.WINDOWS_SIGN_CERT }}
@@ -508,7 +515,6 @@ jobs:
           prerelease: ${{ github.event.inputs.release_type != 'production' }}
           includeUpdaterJson: true
 
-      # Cache build outputs for both Next.js and Tauri
       - name: Cache Build Output
         uses: actions/cache@v3
         with:
