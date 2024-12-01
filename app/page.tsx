@@ -36,22 +36,29 @@ export default function Home() {
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2 px-4">
-            <SidebarTrigger className="-ml-1" />
-            <Separator orientation="vertical" className="mr-2 h-4" />
+            {/* 
+              This is the trigger for the sidebar. When clicked, it toggles the sidebar's visibility.
+              The -ml-1 class is used to make the trigger button flush with the edge of the screen.
+               className="-ml-1" 
+            */}
+            <SidebarTrigger className="-ml-3" />
+            {/* <Separator orientation="vertical" className="mr-2 h-4" />
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem>
                   <BreadcrumbPage>Home</BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
-            </Breadcrumb>
+            </Breadcrumb> */}
           </div>
+          {/* Dark mode toggle */}
           <div className="ml-auto mr-4">
             <ModeToggle />
           </div>
         </header>
+        {/* // Main content */}
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          <Card className="w-full max-w-md mx-auto">
+          {/* <Card className="w-full max-w-md mx-auto">
             <CardContent className="space-y-6 pt-6">
               <h1 className="text-2xl font-bold text-center">Welcome</h1>
               
@@ -79,7 +86,8 @@ export default function Home() {
                 )}
               </div>
             </CardContent>
-          </Card>
+          </Card> */}
+          ABC TEXT
         </div>
       </SidebarInset>
     </SidebarProvider>

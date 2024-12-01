@@ -95,6 +95,27 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      # Set up Python
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      # Install Python dependencies
+      - name: Install Python dependencies
+        run: |
+          cd backend/python
+          pip install -r requirements.txt
+
+      # Build Python binary
+      - name: Build Python binary
+        run: |
+          cd backend/python
+          pyinstaller --onefile --name python_backend-x86_64-unknown-linux-gnu main.py
+          mkdir -p ../../src-tauri/binaries
+          cp dist/python_backend-x86_64-unknown-linux-gnu ../../src-tauri/binaries/
+
       # Build the Tauri application
       - name: Build Tauri App
         uses: tauri-apps/tauri-action@v0
@@ -160,6 +181,27 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      # Set up Python
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      # Install Python dependencies
+      - name: Install Python dependencies
+        run: |
+          cd backend/python
+          pip install -r requirements.txt
+
+      # Build Python binary
+      - name: Build Python binary
+        run: |
+          cd backend/python
+          pyinstaller --onefile --name python_backend-x86_64-apple-darwin main.py
+          mkdir -p ../../src-tauri/binaries
+          cp dist/python_backend-x86_64-apple-darwin ../../src-tauri/binaries/
+
       # Build the Tauri application
       - name: Build Tauri App
         uses: tauri-apps/tauri-action@v0
@@ -224,6 +266,27 @@ jobs:
       # Install project dependencies using pnpm
       - name: Install dependencies
         run: pnpm install
+
+      # Set up Python
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      # Install Python dependencies
+      - name: Install Python dependencies
+        run: |
+          cd backend/python
+          pip install -r requirements.txt
+
+      # Build Python binary
+      - name: Build Python binary
+        run: |
+          cd backend/python
+          pyinstaller --onefile --name python_backend-aarch64-apple-darwin main.py
+          mkdir -p ../../src-tauri/binaries
+          cp dist/python_backend-aarch64-apple-darwin ../../src-tauri/binaries/
 
       # Build the Tauri application
       - name: Build Tauri App
@@ -301,6 +364,27 @@ jobs:
       # Install project dependencies using pnpm
       - name: Install dependencies
         run: pnpm install
+
+      # Set up Python
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      # Install Python dependencies
+      - name: Install Python dependencies
+        run: |
+          cd backend/python
+          pip install -r requirements.txt
+
+      # Build Python binary
+      - name: Build Python binary
+        run: |
+          cd backend/python
+          pyinstaller --onefile --name python_backend-x86_64-pc-windows-msvc main.py
+          mkdir -p ../../src-tauri/binaries
+          cp dist/python_backend-x86_64-pc-windows-msvc ../../src-tauri/binaries/
 
       # Build the Tauri application
       - name: Build Tauri App
