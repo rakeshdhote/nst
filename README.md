@@ -66,7 +66,7 @@ nst/
 ├── app/                    # Next.js pages and routing
 ├── backend/               # Backend services
 │   └── python/           # Python FastAPI backend
-│       ├── server.py     # FastAPI server implementation
+│       ├── main.py       # FastAPI server implementation
 │       ├── requirements.txt  # Python dependencies
 │       └── build_binary.sh   # Script to build Python executable
 ├── components/            # React components
@@ -74,7 +74,8 @@ nst/
 ├── lib/                  # Utility functions and shared code
 ├── public/               # Static assets
 ├── src-tauri/           # Tauri/Rust backend code
-│   └── binaries/        # Compiled Python backend
+│   ├── resources/       # Compiled Python backend and resources
+│   └── src/            # Rust source code
 ├── scripts/             # Build and utility scripts
 ├── styles/              # Global styles and Tailwind config
 └── [build outputs]      # Platform-specific build outputs
@@ -82,14 +83,14 @@ nst/
 
 ## Prerequisites
 
-- Node.js 18 or later
+- Node.js 20 or later
 - Rust (latest stable)
 - pnpm
 - Python 3.10 or later
 - Platform-specific dependencies:
   - **Windows**: Visual Studio Build Tools, WebView2
   - **macOS**: Xcode Command Line Tools
-  - **Linux**: `build-essential`, `libwebkit2gtk-4.0-dev`, `curl`, `wget`, `libssl-dev`, `libgtk-3-dev`, `libayatana-appindicator3-dev`, `librsvg2-dev`
+  - **Linux**: `build-essential`, `libwebkit2gtk-4.0-dev`, `curl`, `wget`, `libssl-dev`, `libgtk-3-dev`, `libayatana-appindicator3-dev`, `librsvg2-dev`, `libwebkit2gtk-4.1-dev`, `libjavascriptcoregtk-4.1-dev`, `libsoup-3.0-dev`
 
 ## Development Setup
 
@@ -99,50 +100,50 @@ nst/
    cd nst
    ```
 
-2. Build Python backend:
+2. Install dependencies:
    ```bash
+   pnpm install
    cd backend/python
-   ./build_binary.sh
+   pip install -r requirements.txt
    cd ../..
    ```
 
-3. Install dependencies:
+3. Build the Python backend:
    ```bash
-   pnpm install
+   cd backend/python
+   pyinstaller --onefile --name fastapi_server main.py
+   mkdir -p ../../src-tauri/resources
+   cp dist/fastapi_server ../../src-tauri/resources/
+   cd ../..
    ```
 
-4. Start development server:
+4. Start the development server:
    ```bash
    pnpm tauri dev
    ```
 
 ## Building for Production
 
-### Windows
-```bash
-pnpm tauri build
-```
-Outputs:
-- `src-tauri/target/release/bundle/msi/` - MSI installer
-- `src-tauri/target/release/bundle/nsis/` - NSIS installer
-- `src-tauri/target/release/` - Executable
+1. Build the Next.js frontend:
+   ```bash
+   pnpm build
+   ```
 
-### macOS
-```bash
-pnpm tauri build
-```
-Outputs:
-- `src-tauri/target/release/bundle/dmg/` - DMG installer
-- `src-tauri/target/release/bundle/macos/` - App bundle
+2. Build the Python backend:
+   ```bash
+   cd backend/python
+   pyinstaller --onefile --name fastapi_server main.py
+   mkdir -p ../../src-tauri/resources
+   cp dist/fastapi_server ../../src-tauri/resources/
+   cd ../..
+   ```
 
-### Linux
-```bash
-pnpm tauri build
-```
-Outputs:
-- `src-tauri/target/release/bundle/deb/` - Debian package
-- `src-tauri/target/release/bundle/appimage/` - AppImage
-- `src-tauri/target/release/` - Binary
+3. Build the Tauri application:
+   ```bash
+   pnpm tauri build
+   ```
+
+Platform-specific builds will be available in `src-tauri/target/release/bundle/`.
 
 ## Utility Scripts
 

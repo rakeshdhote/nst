@@ -108,6 +108,11 @@ source-code.*
 /src-tauri/binaries
 /src-tauri/gen
 /src-tauri/dist
+/src-tauri/target/
+/src-tauri/resources/*
+!/src-tauri/resources/.gitkeep
+/src-tauri/binaries/
+/src-tauri/WixTools
 
 # Python backend
 /backend/python/venv/
@@ -121,6 +126,12 @@ source-code.*
 /backend/python/.pytest_cache/
 /backend/python/.coverage
 /backend/python/htmlcov/
+/backend/python/build/
+/backend/python/dist/
+/backend/python/*.spec
+__pycache__/
+*.py[cod]
+*$py.class
 
 # OS specific
 .DS_Store
