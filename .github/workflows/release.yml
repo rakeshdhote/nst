@@ -65,6 +65,7 @@ jobs:
 
       # Install Linux-specific dependencies
       - name: Install dependencies (ubuntu only)
+        shell: bash
         run: |
           if ! sudo apt-get update; then
             echo "Failed to update package lists"
@@ -94,6 +95,7 @@ jobs:
 
       # Set PKG_CONFIG_PATH for system libraries
       - name: Set PKG_CONFIG_PATH
+        shell: bash
         run: |
           if ! echo "PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/share/pkgconfig" >> $GITHUB_ENV; then
             echo "Failed to set PKG_CONFIG_PATH"
@@ -102,6 +104,7 @@ jobs:
 
       # Install project dependencies using pnpm
       - name: Install dependencies
+        shell: bash
         run: |
           if ! pnpm install; then
             echo "Failed to install project dependencies"
@@ -117,6 +120,7 @@ jobs:
 
       # Install Python dependencies
       - name: Install Python dependencies
+        shell: bash
         run: |
           if ! cd backend/python; then
             echo "Failed to change directory to backend/python"
@@ -129,6 +133,7 @@ jobs:
 
       # Build Python binary
       - name: Build Python binary
+        shell: bash
         run: |
           if ! cd backend/python; then
             echo "Failed to change directory to backend/python"
@@ -211,6 +216,7 @@ jobs:
 
       # Install project dependencies using pnpm
       - name: Install dependencies
+        shell: bash
         run: |
           if ! pnpm install; then
             echo "Failed to install project dependencies"
@@ -226,6 +232,7 @@ jobs:
 
       # Install Python dependencies
       - name: Install Python dependencies
+        shell: bash
         run: |
           if ! cd backend/python; then
             echo "Failed to change directory to backend/python"
@@ -238,6 +245,7 @@ jobs:
 
       # Build Python binary
       - name: Build Python binary
+        shell: bash
         run: |
           if ! cd backend/python; then
             echo "Failed to change directory to backend/python"
@@ -261,9 +269,13 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ENABLE_CODE_SIGNING: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY != '' }}
-          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+          ENABLE_CODE_SIGNING: ${{ secrets.APPLE_SIGNING_IDENTITY != '' }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
           tagName: v${{ github.event.inputs.version || '0.0.1' }}
           releaseName: v${{ github.event.inputs.version || '0.0.1' }}
@@ -274,7 +286,7 @@ jobs:
             - Release build
           releaseDraft: false
           prerelease: ${{ github.event.inputs.release_type != 'production' }}
-          args: '--target x86_64-apple-darwin'
+          includeUpdaterJson: true
 
       # Cache build outputs for both Next.js and Tauri
       - name: Cache Build Output
@@ -293,7 +305,7 @@ jobs:
     permissions:
       contents: write
     # Use the latest macOS environment
-    runs-on: macos-latest
+    runs-on: macos-latest-xlarge
     steps:
       # Check out the repository code
       - name: Checkout repository
@@ -320,6 +332,7 @@ jobs:
 
       # Install project dependencies using pnpm
       - name: Install dependencies
+        shell: bash
         run: |
           if ! pnpm install; then
             echo "Failed to install project dependencies"
@@ -335,6 +348,7 @@ jobs:
 
       # Install Python dependencies
       - name: Install Python dependencies
+        shell: bash
         run: |
           if ! cd backend/python; then
             echo "Failed to change directory to backend/python"
@@ -347,6 +361,7 @@ jobs:
 
       # Build Python binary
       - name: Build Python binary
+        shell: bash
         run: |
           if ! cd backend/python; then
             echo "Failed to change directory to backend/python"
@@ -370,9 +385,13 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ENABLE_CODE_SIGNING: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY != '' }}
-          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+          ENABLE_CODE_SIGNING: ${{ secrets.APPLE_SIGNING_IDENTITY != '' }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
           tagName: v${{ github.event.inputs.version || '0.0.1' }}
           releaseName: v${{ github.event.inputs.version || '0.0.1' }}
@@ -383,7 +402,7 @@ jobs:
             - Release build
           releaseDraft: false
           prerelease: ${{ github.event.inputs.release_type != 'production' }}
-          args: '--target aarch64-apple-darwin'
+          includeUpdaterJson: true
 
       # Cache build outputs for both Next.js and Tauri
       - name: Cache Build Output
@@ -454,9 +473,12 @@ jobs:
           $ErrorActionPreference = "Stop"
           try {
               pnpm install
+              if ($LASTEXITCODE -ne 0) {
+                  throw "pnpm install failed"
+              }
           }
           catch {
-              Write-Error "Failed to install project dependencies"
+              Write-Error $_
               exit 1
           }
 
@@ -471,11 +493,14 @@ jobs:
         run: |
           $ErrorActionPreference = "Stop"
           try {
-              cd backend/python
+              Set-Location backend/python
               pip install -r requirements.txt
+              if ($LASTEXITCODE -ne 0) {
+                  throw "pip install failed"
+              }
           }
           catch {
-              Write-Error "Failed to install Python dependencies"
+              Write-Error $_
               exit 1
           }
 
@@ -484,13 +509,17 @@ jobs:
         run: |
           $ErrorActionPreference = "Stop"
           try {
-              cd backend/python
+              Set-Location backend/python
               pyinstaller --onefile --name fastapi_server main.py
+              if ($LASTEXITCODE -ne 0) {
+                  throw "pyinstaller failed"
+              }
+              
               New-Item -Path "../../src-tauri/resources" -ItemType Directory -Force
               Copy-Item "dist/fastapi_server.exe" -Destination "../../src-tauri/resources/" -Force
           }
           catch {
-              Write-Error "Failed to build Python binary"
+              Write-Error $_
               exit 1
           }
 
@@ -499,8 +528,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ENABLE_CODE_SIGNING: ${{ secrets.WINDOWS_SIGN_CERT != '' }}
-          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
           WINDOWS_SIGN_CERT: ${{ secrets.WINDOWS_SIGN_CERT }}
           WINDOWS_SIGN_CERT_PASSWORD: ${{ secrets.WINDOWS_SIGN_CERT_PASSWORD }}
         with:
