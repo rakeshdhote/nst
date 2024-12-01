@@ -6,6 +6,7 @@ A modern cross-platform desktop application template built with Tauri 2.0, Next.
 
 - [Tech Stack](#tech-stack)
   - [Frontend](#frontend)
+  - [Backend (Python)](#backend-python)
   - [Desktop (Tauri)](#desktop-tauri)
   - [Development Tools](#development-tools)
 - [Features](#features)
@@ -21,6 +22,7 @@ A modern cross-platform desktop application template built with Tauri 2.0, Next.
   - [Cleanup Script](#cleanup-script)
   - [Generate Icons Script](#generate-icons-script)
 - [Updating Dependencies](#updating-dependencies)
+- [API Endpoints](#api-endpoints)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -32,6 +34,11 @@ A modern cross-platform desktop application template built with Tauri 2.0, Next.
 - TailwindCSS 3.4.1
 - ShadCn UI Components
 - TypeScript 5
+
+### Backend (Python)
+- FastAPI 0.109.2
+- Uvicorn 0.27.1
+- PyInstaller 6.3.0
 
 ### Desktop (Tauri)
 - Tauri 2.1.0
@@ -57,11 +64,17 @@ A modern cross-platform desktop application template built with Tauri 2.0, Next.
 ```
 nst/
 ├── app/                    # Next.js pages and routing
+├── backend/               # Backend services
+│   └── python/           # Python FastAPI backend
+│       ├── server.py     # FastAPI server implementation
+│       ├── requirements.txt  # Python dependencies
+│       └── build_binary.sh   # Script to build Python executable
 ├── components/            # React components
 ├── hooks/                # Custom React hooks
 ├── lib/                  # Utility functions and shared code
 ├── public/               # Static assets
 ├── src-tauri/           # Tauri/Rust backend code
+│   └── binaries/        # Compiled Python backend
 ├── scripts/             # Build and utility scripts
 ├── styles/              # Global styles and Tailwind config
 └── [build outputs]      # Platform-specific build outputs
@@ -72,6 +85,7 @@ nst/
 - Node.js 18 or later
 - Rust (latest stable)
 - pnpm
+- Python 3.10 or later
 - Platform-specific dependencies:
   - **Windows**: Visual Studio Build Tools, WebView2
   - **macOS**: Xcode Command Line Tools
@@ -85,12 +99,19 @@ nst/
    cd nst
    ```
 
-2. Install dependencies:
+2. Build Python backend:
+   ```bash
+   cd backend/python
+   ./build_binary.sh
+   cd ../..
+   ```
+
+3. Install dependencies:
    ```bash
    pnpm install
    ```
 
-3. Start development server:
+4. Start development server:
    ```bash
    pnpm tauri dev
    ```
@@ -177,6 +198,25 @@ Example:
 ./scripts/generate_icons.sh my-app-icon.png
 ```
 
+## API Endpoints
+
+The Python backend provides the following REST endpoints:
+
+- `GET /health` - Health check endpoint
+  ```json
+  {"status": "healthy", "service": "python-backend"}
+  ```
+
+- `GET /hello` - Simple greeting endpoint
+  ```json
+  {"message": "Hello from Python Backend!"}
+  ```
+
+- `GET /random` - Generate random number
+  ```json
+  {"number": 42}  // Random number between 1 and 100
+  ```
+
 ## Updating Dependencies
 
 1. Update Node.js dependencies:
@@ -188,6 +228,12 @@ Example:
    ```bash
    cd src-tauri
    cargo update
+   ```
+
+3. Update Python dependencies:
+   ```bash
+   cd backend/python
+   pip install -r requirements.txt
    ```
 
 ## Contributing

@@ -1,6 +1,6 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "Tauri2 Next ShadCn Python Template",
+  "productName": "tauri2-next-shadcn-python-template",
   "version": "0.0.1",
   "identifier": "app.zenmarkai.com",
   "build": {
@@ -31,6 +31,11 @@
       "icons/128x128.png",
       "icons/icon.ico"
     ],
+    "resources": [
+      "binaries/*",
+      "resources/*"
+    ],
+    "externalBin": [],
     "windows": {
       "certificateThumbprint": null,
       "digestAlgorithm": "sha256",

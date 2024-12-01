@@ -7,7 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "build-python": "cd backend/python && ./build_binary.sh",
+    "tauri-dev": "pnpm build-python && pnpm tauri dev",
+    "tauri-build": "pnpm build-python && pnpm tauri build"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.2",

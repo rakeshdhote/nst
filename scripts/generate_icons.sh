@@ -59,15 +59,13 @@ update_png_icons() {
     for size in "${sizes[@]}"; do
         local output_file="$output_dir/${size}x${size}.png"
         # Force RGBA format with transparency
-        convert "$input_file" \
+        if convert "$input_file" \
             -resize "${size}x${size}" \
             -background none \
             -alpha set \
             -channel RGBA \
             -depth 8 \
-            PNG32:"$output_file"
-        
-        if [ $? -eq 0 ]; then
+            PNG32:"$output_file"; then
             # Verify the format
             format=$(identify -format "%[channels]" "$output_file")
             if [[ "$format" == *"rgba"* ]]; then
