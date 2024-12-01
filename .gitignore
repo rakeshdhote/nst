@@ -45,6 +45,49 @@ next-env.d.ts
 *.private.key
 *.private-key.*
 
+# Certificate Folders
+certificates/
+certs/
+.certificates/
+.certs/
+src-tauri/certificates/
+src-tauri/certs/
+**/certificates/
+**/certs/
+
+# Certificates and Security Files
+*.pem
+*.key
+*.crt
+*.cer
+*.pfx
+*.p12
+*.der
+*.spc
+*.pvk
+*.sst
+*.fst
+*.p7b
+*.p7c
+*.p7r
+*.cert
+*.csr
+*.keystore
+*.jks
+*.truststore
+*.b64
+windows-cert.*
+*.sig
+*.asc
+.env.production
+.env.development
+.env.local
+*.private
+private-key.*
+public-key.*
+*_private_key*
+*_public_key*
+
 # IDE
 .idea/
 .vscode/

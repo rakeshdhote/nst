@@ -8,7 +8,12 @@ npx create-next-app@latest my-project --typescript --tailwind --eslint --app-rou
 pnpm dlx shadcn@latest init -d
 
 # add components
-pnpm dlx shadcn@latest add card button textarea card alert
+pnpm dlx shadcn@latest add card button textarea card alert sidebar dropdown
+
+#shadcn theme
+pnpm add next-themes
+
+
 
 # install tauri2.0
 pnpm add -D @tauri-apps/cli@latest
