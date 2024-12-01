@@ -34,15 +34,24 @@ export default function Home() {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-          <div className="flex items-center gap-2 px-4">
-            {/* 
-              This is the trigger for the sidebar. When clicked, it toggles the sidebar's visibility.
-              The -ml-1 class is used to make the trigger button flush with the edge of the screen.
-               className="-ml-1" 
-            */}
-            <SidebarTrigger className="-ml-3" />
-            {/* <Separator orientation="vertical" className="mr-2 h-4" />
+        <header className="flex h-16 shrink-0 items-center gap-2 px-4 py-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+          <div className="flex items-center gap-2">
+            <SidebarTrigger className="-ml-1" />
+          </div>
+          <div className="pl-4">
+            <h1 className="text-xl font-semibold leading-none tracking-tight">
+              Dashboard
+            </h1>
+            {/* <p className="text-sm text-muted-foreground">
+              Monitor your data and analytics
+              </p> */}
+          </div>
+          <div className="ml-auto flex items-center gap-2">
+            <ModeToggle />
+          </div>
+        </header>
+        {/* // Main content */}
+                  {/* <Separator orientation="vertical" className="mr-2 h-4" />
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem>
@@ -50,13 +59,6 @@ export default function Home() {
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb> */}
-          </div>
-          {/* Dark mode toggle */}
-          <div className="ml-auto mr-4">
-            <ModeToggle />
-          </div>
-        </header>
-        {/* // Main content */}
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
           {/* <Card className="w-full max-w-md mx-auto">
             <CardContent className="space-y-6 pt-6">

@@ -1,8 +1,8 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "identifier": "app.zenmarkai.com",
   "productName": "tauri2-next-shadcn-python-template",
   "version": "0.0.1",
-  "identifier": "app.zenmarkai.com",
   "build": {
     "frontendDist": "../out",
     "devUrl": "http://localhost:3000",
@@ -16,7 +16,9 @@
         "width": 800,
         "height": 600,
         "resizable": true,
-        "fullscreen": false
+        "fullscreen": false,
+        "decorations": true,
+        "center": true
       }
     ],
     "security": {
@@ -32,7 +34,6 @@
       "icons/icon.ico"
     ],
     "resources": [
-      "binaries/*",
       "resources/*"
     ],
     "externalBin": [],
@@ -44,7 +45,7 @@
         "type": "downloadBootstrapper"
       },
       "wix": {
-        "language": "en-US"
+        "language": ["en-US"]
       }
     }
   },

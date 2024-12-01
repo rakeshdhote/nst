@@ -46,49 +46,27 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TAURI_DIR="$SCRIPT_DIR/../../src-tauri"
 RESOURCES_DIR="$TAURI_DIR/resources"
 DIST_DIR="$SCRIPT_DIR/dist"
-TARGET_DEBUG_DIR="$TAURI_DIR/target/debug"
-BINARIES_DIR="$TAURI_DIR/binaries"
 
 # Create necessary directories
-mkdir -p "$TARGET_DEBUG_DIR"
-mkdir -p "$BINARIES_DIR"
 mkdir -p "$RESOURCES_DIR"
 
 # Build binary with PyInstaller, only show errors
 echo -e "${GREEN}Building binary...${NC}"
-pyinstaller --clean --onefile server.py > /dev/null 2>&1 || {
+pyinstaller --clean --onefile --name fastapi_server server.py > /dev/null 2>&1 || {
     echo -e "${RED}Error: PyInstaller failed${NC}"
     exit 1
 }
 
 # Copy the binary to Tauri resources directory with platform-specific name
-if [ -f "$DIST_DIR/server" ]; then
-    # Copy to target/debug directory
-    cp "$DIST_DIR/server" "$TARGET_DEBUG_DIR/python_backend"
-    chmod +x "$TARGET_DEBUG_DIR/python_backend"
-    echo -e "${GREEN}Binary copied to: $TARGET_DEBUG_DIR/python_backend${NC}"
-    
-    # Copy to binaries directory with platform-specific name
-    cp "$DIST_DIR/server" "$BINARIES_DIR/python_backend-${PLATFORM_NAME}"
-    chmod +x "$BINARIES_DIR/python_backend-${PLATFORM_NAME}"
-    echo -e "${GREEN}Binary copied to: $BINARIES_DIR/python_backend-${PLATFORM_NAME}${NC}"
-    
-    # Copy to resources directory
-    cp "$DIST_DIR/server" "$RESOURCES_DIR/python_backend"
-    chmod +x "$RESOURCES_DIR/python_backend"
-    echo -e "${GREEN}Binary copied to: $RESOURCES_DIR/python_backend${NC}"
-elif [ -f "$DIST_DIR/server.exe" ]; then
-    # Copy to target/debug directory
-    cp "$DIST_DIR/server.exe" "$TARGET_DEBUG_DIR/python_backend.exe"
-    echo -e "${GREEN}Binary copied to: $TARGET_DEBUG_DIR/python_backend.exe${NC}"
-    
-    # Copy to binaries directory with platform-specific name
-    cp "$DIST_DIR/server.exe" "$BINARIES_DIR/python_backend-${PLATFORM_NAME}.exe"
-    echo -e "${GREEN}Binary copied to: $BINARIES_DIR/python_backend-${PLATFORM_NAME}.exe${NC}"
-    
-    # Copy to resources directory
-    cp "$DIST_DIR/server.exe" "$RESOURCES_DIR/python_backend.exe"
-    echo -e "${GREEN}Binary copied to: $RESOURCES_DIR/python_backend.exe${NC}"
+if [ -f "$DIST_DIR/fastapi_server" ]; then
+    # Copy to resources directory with platform-specific name
+    cp "$DIST_DIR/fastapi_server" "$RESOURCES_DIR/fastapi_server"
+    chmod +x "$RESOURCES_DIR/fastapi_server"
+    echo -e "${GREEN}Binary copied to: $(realpath "$RESOURCES_DIR/fastapi_server")${NC}"
+elif [ -f "$DIST_DIR/fastapi_server.exe" ]; then
+    # Copy to resources directory with platform-specific name
+    cp "$DIST_DIR/fastapi_server.exe" "$RESOURCES_DIR/fastapi_server.exe"
+    echo -e "${GREEN}Binary copied to: $(realpath "$RESOURCES_DIR/fastapi_server.exe")${NC}"
 else
     echo -e "${RED}Error: Binary not found in dist directory${NC}"
     exit 1
