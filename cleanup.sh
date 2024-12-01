@@ -13,9 +13,10 @@ rm -f yarn.lock
 
 # Clean Rust build artifacts
 echo "🦀 Cleaning Rust build artifacts..."
-cd src-tauri
-cargo clean
-cd ..
+(
+    cd src-tauri || exit 1
+    cargo clean
+)
 
 # Clean any OS-specific files
 echo "🗑️  Cleaning system files..."

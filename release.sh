@@ -50,7 +50,7 @@ get_current_version() {
     if [ ! -f "version.txt" ]; then
         echo "0.0.1"
     else
-        cat version.txt | tr -d '\n'
+        < version.txt tr -d '\n'
     fi
 }
 
@@ -58,15 +58,18 @@ get_current_version() {
 increment_version() {
     local version=$1
     # Extract components
-    local major=0  # Keep major version as 0
-    local minor=$(echo $version | cut -d. -f2)
-    local patch=$(echo $version | cut -d. -f3)
+    local minor
+    local patch
+    
+    # Keep major version as 0 (unused but kept for semantic versioning)
+    minor=$(echo "$version" | cut -d. -f2)
+    patch=$(echo "$version" | cut -d. -f3)
 
     # Increment patch version
     patch=$((patch + 1))
     
     # If patch reaches 100, increment minor and reset patch
-    if [ $patch -eq 100 ]; then
+    if [ "$patch" -eq 100 ]; then
         minor=$((minor + 1))
         patch=0
     fi
@@ -140,8 +143,11 @@ trigger_workflow() {
     echo -e "${YELLOW}Triggering release workflow for platform: $platform${NC}"
     
     # Get the repository information from git config
-    local remote_url=$(git config --get remote.origin.url)
-    local repo_path=$(echo $remote_url | sed 's/.*github.com[:/]\(.*\).git/\1/')
+    local remote_url
+    local repo_path
+    
+    remote_url=$(git config --get remote.origin.url)
+    repo_path=$(echo "$remote_url" | sed 's/.*github.com[:/]\(.*\).git/\1/')
     
     # Check if GITHUB_TOKEN is set
     if [ -z "$GITHUB_TOKEN" ]; then
@@ -151,7 +157,8 @@ trigger_workflow() {
     fi
     
     # Construct the workflow dispatch payload
-    local payload=$(cat <<EOF
+    local payload
+    payload=$(cat <<EOF
 {
   "ref": "main",
   "inputs": {

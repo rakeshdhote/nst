@@ -1,26 +1,49 @@
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+#
+# This `Cargo.toml` is used by the `tauri build` command to generate the
+# executable for your app. It's also used by the `cargo` command to build the
+# Rust code in your app.
+
 [package]
-name = "app"
-version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
+name = "tauri2-next-shadcn-python-template"
+version = "0.0.1"
+description = "Tauri2 Next Shadcn Python Template"
+authors = ["NSR Tech. Inc."]
 license = ""
 repository = ""
 edition = "2021"
 rust-version = "1.77.2"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
+# The `lib` section is used to configure the Rust library that is generated
+# when you run `tauri build`. This library is then used to generate the
+# executable for your app.
 [lib]
 name = "app_lib"
+
+# The `crate-type` key is used to specify the types of libraries that should
+# be generated when you run `tauri build`. The `staticlib`, `cdylib`, and `rlib`
+# options are used to generate static, dynamic, and Rust libraries,
+# respectively.
 crate-type = ["staticlib", "cdylib", "rlib"]
 
+# The `build-dependencies` section is used to specify the dependencies that are
+# used by the `tauri build` command.
 [build-dependencies]
 tauri-build = { version = "2.0.2", features = [] }
 
+# The `dependencies` section is used to specify the dependencies that are used
+# by your app. These dependencies are used by the `tauri build` command when
+# generating the executable for your app.
 [dependencies]
+# The `serde_json` crate is used to serialize and deserialize JSON data.
 serde_json = "1.0"
+# The `serde` crate is used to serialize and deserialize data.
 serde = { version = "1.0", features = ["derive"] }
+# The `log` crate is used to log data.
 log = "0.4"
+# The `tauri` crate is used to build the executable for your app.
 tauri = { version = "2.1.0", features = [] }
+# The `tauri-plugin-log` crate is used to log data.
 tauri-plugin-log = "2.0.0-rc"
+# The `tauri-plugin-updater` crate is used to update the app.
 tauri-plugin-updater = "2.0.2"
