@@ -43,43 +43,31 @@ on:
 jobs:
   build-linux:
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.build_linux == 'true'
-    # Required for creating GitHub releases
     permissions:
       contents: write
-    # Use the latest Ubuntu environment
     runs-on: ubuntu-22.04
-    # Run if: tag push OR workflow_dispatch with platform 'linux'
     steps:
-      # Check out the repository code
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Install and configure pnpm package manager
       - name: Install pnpm
         uses: pnpm/action-setup@v2
         with:
           version: latest
 
-      # Set up Node.js environment with caching
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'pnpm'
 
-      # Install Rust toolchain
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
-      # Install Linux-specific dependencies
       - name: Install dependencies (ubuntu only)
-        shell: bash
         run: |
-          if ! sudo apt-get update; then
-            echo "Failed to update package lists"
-            exit 1
-          fi
-          if ! sudo apt-get install -y \
+          sudo apt-get update
+          sudo apt-get install -y \
             libwebkit2gtk-4.0-dev \
             build-essential \
             curl \
@@ -96,78 +84,33 @@ jobs:
             libsoup-3.0 \
             libjavascriptcoregtk-4.1-dev \
             libwebkit2gtk-4.1-dev \
-            patchelf; then
-            echo "Failed to install dependencies"
-            exit 1
-          fi
+            patchelf
 
-      # Set PKG_CONFIG_PATH for system libraries
       - name: Set PKG_CONFIG_PATH
-        shell: bash
         run: |
-          if ! echo "PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/share/pkgconfig" >> $GITHUB_ENV; then
-            echo "Failed to set PKG_CONFIG_PATH"
-            exit 1
-          fi
+          echo "PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/share/pkgconfig" >> $GITHUB_ENV
 
-      # Install project dependencies using pnpm
       - name: Install dependencies
-        shell: bash
-        run: |
-          if ! pnpm install; then
-            echo "Failed to install project dependencies"
-            exit 1
-          fi
+        run: pnpm install
 
-      # Set up Python
-      - name: Set up Python
+      - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-          cache: 'pip'
 
-      # Install Python dependencies
       - name: Install Python dependencies
-        shell: bash
         run: |
-          if ! cd backend/python; then
-            echo "Failed to change directory to backend/python"
-            exit 1
-          fi
-          if ! pip install -r requirements.txt; then
-            echo "Failed to install Python dependencies"
-            exit 1
-          fi
+          cd backend/python
+          pip install -r requirements.txt
+          pip install pyinstaller
 
-      # Build Python binary
-      - name: Build Python binary
-        shell: bash
-        run: |
-          if ! cd backend/python; then
-            echo "Failed to change directory to backend/python"
-            exit 1
-          fi
-          if ! pyinstaller --onefile --name fastapi_server main.py; then
-            echo "Failed to build Python binary"
-            exit 1
-          fi
-          if ! mkdir -p ../../src-tauri/resources; then
-            echo "Failed to create resources directory"
-            exit 1
-          fi
-          if ! cp dist/fastapi_server ../../src-tauri/resources/; then
-            echo "Failed to copy binary to target directory"
-            exit 1
-          fi
+      - name: Build Python
+        run: pwsh scripts/build-python.ps1
 
-      # Build the Tauri application
       - name: Build Tauri App
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ENABLE_CODE_SIGNING: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY != '' }}
-          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
         with:
           tagName: v${{ github.event.inputs.version || '0.0.1' }}
           releaseName: v${{ github.event.inputs.version || '0.0.1' }}
@@ -180,7 +123,6 @@ jobs:
           prerelease: ${{ github.event.inputs.release_type != 'production' }}
           includeUpdaterJson: true
 
-      # Cache build outputs for both Next.js and Tauri
       - name: Cache Build Output
         uses: actions/cache@v3
         with:
