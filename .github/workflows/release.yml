@@ -302,6 +302,8 @@ jobs:
     permissions:
       contents: write
     runs-on: windows-latest
+    env:
+      RELEASE_VERSION: ${{ github.event.inputs.version || github.ref_name }}
     steps:
       - uses: actions/checkout@v3
       
@@ -339,3 +341,27 @@ jobs:
         
       - name: Build the app
         run: pnpm tauri build
+
+      - name: Get release version
+        id: get_version
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Release
+        if: github.event.inputs.create_release == 'true'
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.get_version.outputs.version }}
+          name: NSR Technologies App ${{ steps.get_version.outputs.version }}
+          draft: false
+          prerelease: ${{ github.event.inputs.release_type != 'production' }}
+          files: |
+            src-tauri/target/release/bundle/msi/*.msi
+            src-tauri/target/release/*.exe
