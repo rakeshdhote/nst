@@ -76,6 +76,10 @@ rm -rf .cache
 rm -rf .temp
 rm -rf .tmp
 
+# Clean pnpm directory
+echo -e "${YELLOW}📦 Cleaning pnpm directory...${NC}"
+rm -rf .pnpm
+
 echo -e "${GREEN}✨ Cleanup complete!${NC}"
 echo -e "${BLUE}To rebuild the project:${NC}"
 echo -e "1. Run ${YELLOW}pnpm install${NC} to reinstall Node.js dependencies"

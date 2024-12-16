@@ -159,5 +159,6 @@ lerna-debug.log*
 .tmp/
 
 .windsurfrules
-z_plugins-workspace-2/
-src-tauri/resources/
+
+# Python backend
+src-tauri/resources/*

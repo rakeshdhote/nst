@@ -29,17 +29,18 @@ if [ "$PLATFORM_NAME" = "UNKNOWN" ]; then
 fi
 
 # Create virtual environment if it doesn't exist
-if [ ! -d "venv" ]; then
-    python3 -m venv venv 2>&1 | grep -i "error"
+if [ ! -d ".venv" ]; then
+    echo -e "${GREEN}Creating virtual environment...${NC}"
+    uv venv .venv 2>&1 | grep -i "error"
 fi
 
 # Activate virtual environment
 # shellcheck source=/dev/null
-source venv/bin/activate
+source .venv/bin/activate
 
 # Install requirements quietly, only show errors
 echo -e "${GREEN}Installing dependencies...${NC}"
-pip install -r requirements.txt -q 2>&1 | grep -i "error"
+uv pip install -r requirements.txt --no-cache 2>&1 | grep -i "error"
 
 # Define paths
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
