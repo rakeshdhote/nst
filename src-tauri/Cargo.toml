@@ -29,27 +29,32 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 # The `build-dependencies` section is used to specify the dependencies that are
 # used by the `tauri build` command.
 [build-dependencies]
-tauri-build = { version = "2.0.0-alpha", features = [] }
+tauri-build = { version = "2.0.3", features = [] }
 
 # The `dependencies` section is used to specify the dependencies that are used
 # by your app. These dependencies are used by the `tauri build` command when
 # generating the executable for your app.
 [dependencies]
 # The `serde_json` crate is used to serialize and deserialize JSON data.
-serde_json = "1.0"
+serde_json = "1.0.133"
+
 # The `serde` crate is used to serialize and deserialize data.
-serde = { version = "1.0", features = ["derive"] }
+serde = { version = "1.0.216", features = ["derive"] }
+
 # The `log` crate is used to log data.
-log = "0.4"
+log = "0.4.22"
+
 # The `tauri` crate is used to build the executable for your app.
-tauri = { version = "2.0.0-alpha", features = [] }
+tauri = { version = "2.1.1", features = [] }
+
 # The `tauri-plugin-log` crate is used to log data.
-tauri-plugin-log = "2.0.0-rc"
+tauri-plugin-log = "2.2.0"
+
 # The `tauri-plugin-updater` crate is used to update the app.
-tauri-plugin-updater = "2.0.2"
+tauri-plugin-updater = "2.3.0"
 
 [target.'cfg(windows)'.dependencies]
-winapi = { version = "0.3", features = ["processthreadsapi", "handleapi"] }
+winapi = { version = "0.3.9", features = ["processthreadsapi", "handleapi"] }
 
 [features]
 custom-protocol = ["tauri/custom-protocol"]

@@ -157,3 +157,7 @@ lerna-debug.log*
 .cache/
 .temp/
 .tmp/
+
+.windsurfrules
+z_plugins-workspace-2/
+src-tauri/resources/
