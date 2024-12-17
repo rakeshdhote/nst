@@ -1,5 +1,5 @@
 use std::path::{Path, PathBuf};
-use std::process::{Child, Command};
+use std::process::Command;
 use tauri::Manager;
 
 pub struct PythonBackend {
