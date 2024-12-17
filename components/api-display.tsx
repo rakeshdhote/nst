@@ -97,6 +97,7 @@ export function ApiDisplay({ type }: ApiDisplayProps) {
   }
 
   if (type === "health") {
+    
     const healthData = data as HealthResponse
     return (
       <Card>

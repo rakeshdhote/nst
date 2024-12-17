@@ -11,6 +11,7 @@ A modern cross-platform desktop application template built with Tauri 2.0, Next.
   - [Development Tools](#development-tools)
 - [Features](#features)
 - [Project Structure](#project-structure)
+- [Project Guidelines](#project-guidelines)
 - [Prerequisites](#prerequisites)
 - [Development Setup](#development-setup)
 - [Building for Production](#building-for-production)
@@ -80,6 +81,19 @@ nst/
 ├── styles/              # Global styles and Tailwind config
 └── [build outputs]      # Platform-specific build outputs
 ```
+
+## Project Guidelines
+
+1. **Use Tauri 2.0** to create a desktop application.
+2. **Use Next.js** to create a web application.
+3. **Use ShadCn UI components** to create a user interface.
+4. **Use Python** to create a backend server.
+5. **Use FastAPI** to create a RESTful API.
+6. **Use PyInstaller** to create a standalone application.
+7. **Follow the existing code style**.
+8. **Add tests if applicable**.
+9. **Update documentation as needed**.
+10. **Reference any related issues in your PR**.
 
 ## Prerequisites
 
