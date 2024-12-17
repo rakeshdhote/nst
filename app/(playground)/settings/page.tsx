@@ -190,7 +190,12 @@ export function FileExplorer() {
           </div>
         )}
 
+        <div className="text-sm text-muted-foreground mb-4">
+          {path ? `Selected path: ${path}` : 'No path selected'}
+        </div>
+
         <div className="border rounded-lg">
+          Rust: 
           {files.length > 0 ? (
             <div className="p-2">
               {files.map((entry, index) => (
