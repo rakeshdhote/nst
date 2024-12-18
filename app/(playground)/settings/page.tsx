@@ -90,6 +90,7 @@ function FileExplorer() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [extensions, setExtensions] = useState<string[]>([]); // Add this line to setFiles
+  const [apiResponse, setApiResponse] = useState<string>(''); // State to hold API response
 
   // handleListFiles lists the files in the given folder
   const handleListFiles = async () => {
@@ -111,6 +112,8 @@ function FileExplorer() {
       }
       
       const data = await response.json();
+      const prettyData = JSON.stringify(data, null, 2);
+      console.log(prettyData);
       const fileEntries = data.files.map((filePath: string) => ({
         path: filePath,
         name: filePath.split('/').pop() || '',
@@ -124,6 +127,33 @@ function FileExplorer() {
       setError('Failed to list files');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleApiCall = async () => {
+    try {
+      const response = await fetch(`http://${config.python_server.host}:${config.python_server.port}/explorefolder`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ folder: path.trim() })
+      });
+
+      console.log('Response status:', response.status); // Log the response status
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const text = await response.text(); // Get raw response as text
+      console.log('Raw response:', text); // Log the raw response
+      const data = JSON.parse(text); // Parse the text as JSON
+      const prettyData = JSON.stringify(data, null, 2);
+      setApiResponse(prettyData); // Update state with the pretty-printed response
+    } catch (error) {
+      console.error('Error fetching files:', error);
     }
   };
 
@@ -164,7 +194,7 @@ function FileExplorer() {
   };
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
+    <Card className="w-full max-w-7xl mx-auto p-4 bg-background shadow-lg">
       <CardHeader>
         <CardTitle>File Explorer</CardTitle>
       </CardHeader>
@@ -202,12 +232,24 @@ function FileExplorer() {
           {path ? `Selected path: ${path}` : 'No path selected'}
         </div>
 
-        <Button 
+        {/* <Button 
           onClick={handleListFiles}
           disabled={isLoading}
         >
           {isLoading ? 'Loading...' : 'List Files'}
+        </Button> */}
+
+        <Button 
+          onClick={handleApiCall}
+        >
+          Make API Call
         </Button>
+
+        {apiResponse && (
+          <div className="text-sm text-muted-foreground mb-4">
+            API Response: <pre>{apiResponse}</pre>
+          </div>
+        )}
 
         {extensions.length > 0 && (
           <div className="text-sm text-muted-foreground mb-4">
@@ -215,7 +257,7 @@ function FileExplorer() {
           </div>
         )}
 
-        <div className="border rounded-lg">
+        {/* <div className="border rounded-lg">
           Rust: 
           {files.length > 0 ? (
             <div className="p-2">
@@ -228,7 +270,7 @@ function FileExplorer() {
               {isLoading ? 'Loading...' : 'No files to display'}
             </div>
           )}
-        </div>
+        </div> */}
       </CardContent>
     </Card>
   );
