@@ -26,12 +26,14 @@ import {
 } from "@/components/ui/breadcrumb"
 import { Separator } from "@/components/ui/separator"
 import SettingsPage from "./(playground)/settings/page";
+import { saveWindowState, StateFlags, restoreStateCurrent } from '@tauri-apps/plugin-window-state';
 
 export default function DashboardPage() {
   const [permissionGranted, setPermissionGranted] = useState(false);
 
   useEffect(() => {
     checkNotificationPermission();
+    restoreStateCurrent(StateFlags.ALL);
   }, []);
 
   const checkNotificationPermission = async () => {
@@ -74,6 +76,16 @@ export default function DashboardPage() {
     console.log(answer); // Prints boolean to the console
   };
 
+  const handleSaveState = () => {
+    try {
+      saveWindowState(StateFlags.ALL);
+      toast.success('State saved successfully!');
+    } catch (error) {
+      console.error('Error saving state:', error);
+      toast.error('Failed to save state');
+    }
+  };
+
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -108,6 +120,12 @@ export default function DashboardPage() {
                 onClick={handleConfirmation}
               >
                 Confirm Action
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={handleSaveState}
+              >
+                Save Window State
               </Button>
               <ModeToggle />
             </div>
