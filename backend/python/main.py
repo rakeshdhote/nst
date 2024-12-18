@@ -1,13 +1,14 @@
+import os
+import random
+import logging
+import sys
+import json
+from typing import List
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import List
-import random
+import glob
 import uvicorn
-import json
-import os
-import logging
-import sys
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -24,25 +25,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/health")
-async def health_check():
-    return {"status": "healthy", "service": "python-backend"}
-
-@app.get("/hello")
-async def hello():
-    return {"message": "Hello from Python Backend!"}
-
-@app.get("/random")
-async def get_random_number():
-    return {"number": random.randint(1, 100)}
-
-# Define request model for explore folder
+# Define request and response models
 class FolderRequest(BaseModel):
     folder: str
 
-import glob
-
-# Define response model for explore folder
 class FolderResponse(BaseModel):
     message: str
     path: str
@@ -50,9 +36,26 @@ class FolderResponse(BaseModel):
     folders: List[str]
     extensions: List[str]
 
+# Define endpoints
+@app.get("/health")
+async def health_check():
+    logger.info("Health check endpoint called.")
+    return {"status": "healthy", "service": "python-backend"}
+
+@app.get("/hello")
+async def hello():
+    logger.info("Hello endpoint called.")
+    return {"message": "Hello from Python Backend!"}
+
+@app.get("/random")
+async def get_random_number():
+    number = random.randint(1, 100)
+    logger.info(f"Random number generated: {number}")
+    return {"number": number}
+
 @app.post("/explorefolder", response_model=FolderResponse)
 async def explore_folder(request: FolderRequest):
-    # Logic to explore the folder
+    logger.info(f"Exploring folder: {request.folder}")
     files = []
     folders = []
     extensions = set()
@@ -82,6 +85,7 @@ async def explore_folder(request: FolderRequest):
         "extensions": extensions
     }
 
+# Run the server
 if __name__ == "__main__":
     # Default configuration
     host = "127.0.0.1"
@@ -99,7 +103,7 @@ if __name__ == "__main__":
         else:
             logger.warning(f"Config file not found at {config_path}, using default values")
 
-        logger.info(f"Starting server on {host}:{port}")
+        logger.info(f"Starting server at http://{host}:{port}")
         uvicorn.run(app, host=host, port=port)
     except Exception as e:
         logger.error(f"Failed to start server: {e}")

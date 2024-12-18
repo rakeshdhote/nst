@@ -162,3 +162,4 @@ lerna-debug.log*
 
 # Python backend
 src-tauri/resources/*
+backend/python/workbook.ipynb
