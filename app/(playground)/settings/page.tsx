@@ -8,19 +8,22 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { ChevronRight, ChevronDown, Folder, File } from "lucide-react";
 
+// FileEntry represents a single file or folder
 interface FileEntry {
-  path: string;
-  name: string;
-  is_file: boolean;
-  size: number;
-  children?: FileEntry[];
+  path: string; // full path of the file or folder
+  name: string; // name of the file or folder (without path)
+  is_file: boolean; // true if the entry is a file, false if it's a folder
+  size: number; // size of the file (0 if it's a folder)
+  children?: FileEntry[]; // children of the folder (if any)
 }
 
+// FileItemProps represents the props passed to the FileItem component
 interface FileItemProps {
   entry: FileEntry;
-  level: number;
+  level: number; // level of indentation for the item
 }
 
+// formatFileSize formats a file size in bytes to a human-readable string
 const formatFileSize = (bytes: number): string => {
   const units = ['B', 'KB', 'MB', 'GB'];
   let size = bytes;
@@ -34,10 +37,12 @@ const formatFileSize = (bytes: number): string => {
   return `${size.toFixed(1)} ${units[unitIndex]}`;
 };
 
+// FileItem renders a single file or folder
 function FileItem({ entry, level }: FileItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const paddingLeft = `${level * 20}px`;
+  const paddingLeft = `${level * 20}px`; // indentation for the item
 
+  // toggleExpand toggles the expansion of the folder
   const toggleExpand = () => {
     if (!entry.is_file) {
       setIsExpanded(!isExpanded);
@@ -77,6 +82,7 @@ function FileItem({ entry, level }: FileItemProps) {
   );
 }
 
+// FileExplorer renders the file explorer component
 export function FileExplorer() {
   const [path, setPath] = useState('');
   const [files, setFiles] = useState<FileEntry[]>([]);
@@ -84,7 +90,7 @@ export function FileExplorer() {
   const [isLoading, setIsLoading] = useState(false);
   const [extensions, setExtensions] = useState<string[]>([]); // Add this line to setFiles
 
-
+  // handleListFiles lists the files in the given folder
   const handleListFiles = async () => {
     if (!path.trim()) {
       return;
@@ -121,6 +127,7 @@ export function FileExplorer() {
     }
   };
 
+  // handleSelectFolder opens the folder selection dialog
   const handleSelectFolder = async () => {
     try {
       setError('');
