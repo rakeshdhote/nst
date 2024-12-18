@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card"
 import { toast } from "sonner"
+import config from '../config.json';
 
 interface ApiDisplayProps {
   type: "health" | "random"
@@ -30,7 +31,6 @@ export function ApiDisplay({ type }: ApiDisplayProps) {
       setLoading(true)
       try {
         const endpoint = type === "health" ? "/health" : "/random"
-        const config = require("../config.json")
         const response = await fetch(`http://${config.python_server.host}:${config.python_server.port}${endpoint}`)
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`)

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { ChevronRight, ChevronDown, Folder, File } from "lucide-react";
+import config from '@/config.json';
 
 // FileEntry represents a single file or folder
 interface FileEntry {
@@ -83,7 +84,7 @@ function FileItem({ entry, level }: FileItemProps) {
 }
 
 // FileExplorer renders the file explorer component
-export function FileExplorer() {
+function FileExplorer() {
   const [path, setPath] = useState('');
   const [files, setFiles] = useState<FileEntry[]>([]);
   const [error, setError] = useState('');
@@ -97,7 +98,6 @@ export function FileExplorer() {
     }
     setIsLoading(true);
     try {
-      const config = require("@/config.json");
       const response = await fetch(`http://${config.python_server.host}:${config.python_server.port}/explorefolder`, {
         method: 'POST',
         headers: {
@@ -236,8 +236,9 @@ export function FileExplorer() {
 
 export default function SettingsPage() {
   return (
-    <div className="flex items-center justify-center h-full">
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">Settings</h1>
       <FileExplorer />
     </div>
-  )
+  );
 }
