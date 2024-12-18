@@ -52,8 +52,12 @@ A modern cross-platform desktop application template built with Tauri 2.0, Next.
 
 ## Features
 
-- Modern tech stack with Tauri 2.0 and Next.js 15
-- Beautiful UI components from ShadCn
+- Tauri 2.0 desktop application.
+- Next.js web application.
+- ShadCn UI components for a modern user interface.
+- Python backend using FastAPI for RESTful API services.
+- Window state saving and restoring functionality with toast notifications.
+- Dialog and notification capabilities for enhanced user interactions.
 - Dark/Light mode support
 - Auto-updates support
 - Type-safe development with TypeScript
@@ -215,41 +219,21 @@ Example:
 
 ## API Endpoints
 
-The Python backend provides the following REST endpoints:
+### Health Check
+- **Endpoint**: `GET /health`
+- **Description**: Checks if the server is running.
 
-- `GET /health` - Health check endpoint
-  ```json
-  {"status": "healthy", "service": "python-backend"}
-  ```
+### Hello
+- **Endpoint**: `GET /hello`
+- **Description**: Returns a greeting message.
 
-- `GET /hello` - Simple greeting endpoint
-  ```json
-  {"message": "Hello from Python Backend!"}
-  ```
+### Random Number
+- **Endpoint**: `GET /random`
+- **Description**: Returns a random number.
 
-- `GET /random` - Generate random number
-  ```json
-  {"number": 42}  // Random number between 1 and 100
-  ```
-
-## Updating Dependencies
-
-1. Update Node.js dependencies:
-   ```bash
-   pnpm update
-   ```
-
-2. Update Rust dependencies:
-   ```bash
-   cd src-tauri
-   cargo update
-   ```
-
-3. Update Python dependencies:
-   ```bash
-   cd backend/python
-   pip install -r requirements.txt
-   ```
+### Explore Folder
+- **Endpoint**: `POST /explore`
+- **Description**: Explores the specified folder and returns its contents.
 
 ## Contributing
 
