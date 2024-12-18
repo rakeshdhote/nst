@@ -10,7 +10,7 @@ use python_backend::PythonBackend;
 fn main() {
     tauri::Builder::default()
         .setup(|app| {
-            let backend = PythonBackend::new("fastapi_server");
+            let backend = PythonBackend::new("my_fastapi_app");
             backend.start(app)?;
             Ok(())
         })

@@ -112,6 +112,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar"
 import SettingsPage from "./(playground)/settings/page";
+import { ModeToggle } from "@/components/theme-toggle";
 
 export default function DashboardPage() {
   return (
@@ -135,6 +136,11 @@ export default function DashboardPage() {
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
+
+            <div className="ml-auto flex items-center gap-2">
+             <ModeToggle />
+           </div>
+           
           </div>
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">

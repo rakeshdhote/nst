@@ -82,39 +82,40 @@ export function FileExplorer() {
   const [files, setFiles] = useState<FileEntry[]>([]);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [extensions, setExtensions] = useState<string[]>([]); // Add this line to setFiles
+
 
   const handleListFiles = async () => {
     if (!path.trim()) {
-      setError('Please enter a valid path');
       return;
     }
-
+    setIsLoading(true);
     try {
-      setError('');
-      setIsLoading(true);
-      console.log('Listing files for path:', path);
+      const config = require("@/config.json");
+      const response = await fetch(`http://${config.python_server.host}:${config.python_server.port}/explorefolder`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ folder: path.trim() })
+      });
       
-      const fileList = await invoke<FileEntry[]>('list_files', { path: path.trim() });
-      console.log('Received files:', fileList);
-      
-      if (Array.isArray(fileList)) {
-        setFiles(fileList);
-        if (fileList.length === 0) {
-          toast.info('Directory is empty');
-        } else {
-          toast.success(`Found ${fileList.length} items`);
-        }
-      } else {
-        console.error('Unexpected response format:', fileList);
-        setError('Received invalid response from server');
-        setFiles([]);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
+      
+      const data = await response.json();
+      const fileEntries = data.files.map((filePath: string) => ({
+        path: filePath,
+        name: filePath.split('/').pop() || '',
+        is_file: true,
+        size: 0,
+      }));
+      setFiles(fileEntries);
+      setExtensions(data.extensions);
     } catch (err) {
-      console.error('Error listing files:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to list files';
-      setError(errorMessage);
-      toast.error(errorMessage);
-      setFiles([]);
+      console.error(err);
+      setError('Failed to list files');
     } finally {
       setIsLoading(false);
     }
@@ -176,7 +177,7 @@ export function FileExplorer() {
           />
           <Button 
             onClick={handleSelectFolder}
-            variant="outline"
+            // variant="outline"
             disabled={isLoading}
           >
             <Folder className="h-4 w-4 mr-2" />
@@ -193,6 +194,19 @@ export function FileExplorer() {
         <div className="text-sm text-muted-foreground mb-4">
           {path ? `Selected path: ${path}` : 'No path selected'}
         </div>
+
+        <Button 
+          onClick={handleListFiles}
+          disabled={isLoading}
+        >
+          {isLoading ? 'Loading...' : 'List Files'}
+        </Button>
+
+        {extensions.length > 0 && (
+          <div className="text-sm text-muted-foreground mb-4">
+            Found extensions: {extensions.join(', ')}
+          </div>
+        )}
 
         <div className="border rounded-lg">
           Rust: 

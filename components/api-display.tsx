@@ -30,7 +30,8 @@ export function ApiDisplay({ type }: ApiDisplayProps) {
       setLoading(true)
       try {
         const endpoint = type === "health" ? "/health" : "/random"
-        const response = await fetch(`http://127.0.0.1:8000${endpoint}`)
+        const config = require("../config.json")
+        const response = await fetch(`http://${config.python_server.host}:${config.python_server.port}${endpoint}`)
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`)
         }
