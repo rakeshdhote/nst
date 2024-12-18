@@ -40,7 +40,7 @@ impl PythonBackend {
                 return Ok(path.clone());
             }
         }
-        
+
         Err(std::io::Error::new(
             std::io::ErrorKind::NotFound,
             "Python backend not found in any of the expected locations",
@@ -66,7 +66,8 @@ impl PythonBackend {
 
     pub fn start(&self, app: &tauri::App) -> Result<(), String> {
         let possible_paths = self.get_possible_paths(app)?;
-        let backend_path = self.find_backend_path(&possible_paths)
+        let backend_path = self
+            .find_backend_path(&possible_paths)
             .map_err(|e| e.to_string())?;
 
         self.set_executable_permissions(&backend_path);

@@ -1,8 +1,8 @@
+use log::{error, info};
+use native_dialog::FileDialog;
 use serde::Serialize;
 use std::fs;
 use std::path::Path;
-use log::{info, error};
-use native_dialog::FileDialog;
 
 #[derive(Serialize, Debug)]
 pub struct FileEntry {
@@ -21,9 +21,7 @@ pub fn list_files(path: &str) -> Result<Vec<FileEntry>, String> {
 
 #[tauri::command]
 pub fn select_folder() -> Result<String, String> {
-    match FileDialog::new()
-        .set_location("~")
-        .show_open_single_dir() {
+    match FileDialog::new().set_location("~").show_open_single_dir() {
         Ok(Some(path)) => Ok(path.to_string_lossy().into_owned()),
         Ok(None) => Err("No folder selected".to_string()),
         Err(e) => Err(format!("Error selecting folder: {}", e)),
@@ -40,21 +38,22 @@ fn list_directory_contents(dir_path: &Path) -> Result<Vec<FileEntry>, String> {
     };
 
     let mut files = Vec::new();
-    
+
     for entry_result in entries {
         match entry_result {
             Ok(entry) => {
                 match entry.metadata() {
                     Ok(metadata) => {
                         let path = entry.path();
-                        let name = path.file_name()
+                        let name = path
+                            .file_name()
                             .map(|n| n.to_string_lossy().into_owned())
                             .unwrap_or_default();
-                        
+
                         let children = if metadata.is_dir() {
                             match list_directory_contents(&path) {
                                 Ok(child_entries) => Some(child_entries),
-                                Err(_) => Some(vec![]) // Empty vec for unreadable directories
+                                Err(_) => Some(vec![]), // Empty vec for unreadable directories
                             }
                         } else {
                             None
@@ -80,14 +79,12 @@ fn list_directory_contents(dir_path: &Path) -> Result<Vec<FileEntry>, String> {
             }
         }
     }
-    
+
     // Sort entries: directories first, then files, both alphabetically
-    files.sort_by(|a, b| {
-        match (a.is_file, b.is_file) {
-            (true, false) => std::cmp::Ordering::Greater,
-            (false, true) => std::cmp::Ordering::Less,
-            _ => a.name.to_lowercase().cmp(&b.name.to_lowercase()),
-        }
+    files.sort_by(|a, b| match (a.is_file, b.is_file) {
+        (true, false) => std::cmp::Ordering::Greater,
+        (false, true) => std::cmp::Ordering::Less,
+        _ => a.name.to_lowercase().cmp(&b.name.to_lowercase()),
     });
 
     info!("Found {} files/directories", files.len());
