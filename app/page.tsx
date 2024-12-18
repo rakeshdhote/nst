@@ -15,6 +15,7 @@ import {
   requestPermission,
   sendNotification,
 } from '@tauri-apps/plugin-notification';
+import { ask } from '@tauri-apps/plugin-dialog';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -64,6 +65,15 @@ export default function DashboardPage() {
     }
   };
 
+  const handleConfirmation = async () => {
+    const answer = await ask('This action cannot be reverted. Are you sure?', {
+      title: 'Tauri',
+      kind: 'warning',
+    });
+
+    console.log(answer); // Prints boolean to the console
+  };
+
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -92,6 +102,12 @@ export default function DashboardPage() {
                 onClick={handleNotification}
               >
                 Send Notification
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={handleConfirmation}
+              >
+                Confirm Action
               </Button>
               <ModeToggle />
             </div>

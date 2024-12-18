@@ -60,5 +60,8 @@ tauri-plugin-dialog = "2.2.0"
 [target.'cfg(windows)'.dependencies]
 winapi = { version = "0.3.9", features = ["processthreadsapi", "handleapi"] }
 
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-window-state = "2.2.0"
+
 [features]
 custom-protocol = ["tauri/custom-protocol"]
