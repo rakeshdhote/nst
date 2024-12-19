@@ -27,6 +27,7 @@ import {
 import { Separator } from "@/components/ui/separator"
 import SettingsPage from "./(playground)/settings/page";
 import { saveWindowState, StateFlags, restoreStateCurrent } from '@tauri-apps/plugin-window-state';
+import TreeComponent from "./(playground)/tree/page";
 
 export default function DashboardPage() {
   const [permissionGranted, setPermissionGranted] = useState(false);
@@ -133,6 +134,9 @@ export default function DashboardPage() {
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
           <SettingsPage />
+        </div>
+        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+          <TreeComponent />
         </div>
       </SidebarInset>
     </SidebarProvider>
