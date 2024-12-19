@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import glob
 import uvicorn
+from dataorganization import document_processing_workflow
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -84,6 +85,35 @@ async def explore_folder(request: FolderRequest):
         "folders": folders, 
         "extensions": extensions
     }
+
+# @app.post("/dataorg")
+# async def data_organization(
+#     source_directory: str, 
+#     destination_directory: str, 
+#     summary_model: str, 
+#     tree_model: str, 
+#     api_base_url: str, 
+#     use_streaming: bool = False
+# ):
+#     # Ensure destination directory exists
+#     os.makedirs(destination_directory, exist_ok=True)
+
+#     # Run the workflow
+#     organized_files_result = document_processing_workflow(
+#         source_path=source_directory,
+#         destination_path=destination_directory,
+#         api_host="localhost",
+#         api_port=8111,
+#         summary_model=summary_model,
+#         tree_model=tree_model,
+#         api_base=api_base_url,
+#         stream=use_streaming
+#     )
+
+#     # Extract the results
+#     concatenated_data = organized_files_result.get("concatenated_data", [])
+
+#     return concatenated_data
 
 # Run the server
 if __name__ == "__main__":

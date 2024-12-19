@@ -61,8 +61,30 @@ DIST_DIR="$SCRIPT_DIR/dist"
 # Create necessary directories
 mkdir -p "$RESOURCES_DIR"
 
+show_progress() {
+    local duration=$1
+    local total_steps=50
+
+    echo -n "Progress: ["
+    for ((i = 0; i <= total_steps; i++)); do
+        sleep $(echo "scale=2; $duration/$total_steps" | bc)
+        echo -n "#"
+        local progress=$((i * 100 / total_steps))
+        echo -ne "\rProgress: ["
+        for ((j=0; j < i; j++)); do
+            echo -n "#"
+        done
+        for ((j=i; j < total_steps; j++)); do
+            echo -n " "
+        done
+        echo -ne "] $progress%"
+    done
+    echo -e "\nDone!"
+}
+
 # Build binary with PyInstaller, only show errors
 echo -e "${GREEN}Building the FastAPI server binary using PyInstaller...${NC}"
+show_progress 10
 pyinstaller --clean --onefile --name my_fastapi_app main.py > /dev/null 2>&1 || {
     echo -e "${RED}Error: PyInstaller failed${NC}"
     exit 1

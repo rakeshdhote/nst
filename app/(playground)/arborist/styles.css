@@ -1,204 +1,260 @@
+/* 
+  ================ 
+  Global Styles 
+  ================ 
+*/
+
 /* Reset default margin, padding, and box-sizing for all elements */
-* {
-    margin: 2;
-    padding: 0;
-    box-sizing: border-box;
-  }
-  
-  /* Set height and line-height for html, body, and :root */
-  html,
-  body,
-  :root {
-    height: 100%;
-    line-height: 30px;
-  }
-  
-  /* Set cursor to pointer for buttons */
-  button {
-    cursor: pointer;
-  }
-  
-  /* Main container for the app */
-  .app-container {
-    display: flex;
-    gap: 8px;
-    background-color: #151515;
-    color: #999999;
-    min-height: 100vh;
-    overflow-x: auto;
-  }
-  
-  /* Sidebar styles */
-  .sidebar {
-    padding: 20px;
-    width: 300px;
-    border-right: 1px solid #5c5c5c;
-  }
-  
-  /* Heading title styles */
-  .heading-title {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    margin-bottom: 2rem;
-  }
-  
-  /* Arborist component styles */
-  
-  /* Container for each node */
-  .node-container,
-  .node-content {
-    display: flex;
-    height: 100%;
-    align-items: center;
-    width: 100%;
-  }
-  
-  /* Content of each node */
-  .node-content {
-    cursor: pointer;
-  }
-  
-  /* Arrow icon in node content */
-  .node-content span.arrow {
-    width: 20px;
-    font-size: 20px;
-    display: flex;
-  }
-  
-  /* File or folder icon in node content */
-  .node-content span.file-folder-icon {
-    margin-right: 10px;
-    display: flex;
-    align-items: center;
-    font-size: 20px;
-  }
-  
-  /* Text in node content */
-  .node-content span.node-text {
-    flex: 1;
-    font-size: 15px;
-    /* color: rgb(0, 0, 0); */
-  }
-  
-  /* Input styles for node content and search input */
-  .node-content input[type='text'],
-  .search-input {
-    padding: 0px 20px;
-    outline: none;
-    color: white;
-    border-radius: 2px;
-  }
-  
-  /* Input styles for node content */
-  .node-content input[type='text'] {
-    width: 97%;
-    border: 1px solid #878787;
-    background: transparent;
-    height: 22px;
-  }
-  
-  /* Search input styles */
-  .search-input {
-    width: 100%;
-    height: 30px;
-    background: #2d2c2c;
-    border: none;
-    margin: 1rem 0;
-  }
-  
-  /* Focus state for search input */
-  .search-input:focus {
-    border: 1px solid #878787;
-  }
-  
-  /* File actions container */
-  .file-actions {
-    height: 100%;
-    display: flex;
-  }
-  
-  /* Button styles for file actions */
-  .file-actions button {
-    cursor: pointer;
-  }
-  
-  /* Folder file actions container */
-  .folderFileActions {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    margin-right: 10px;
-  }
-  
-  /* Button styles for folder file actions */
-  .folderFileActions button {
-    display: flex;
-    align-items: center;
-    color: #999999;
-    background-color: inherit;
-    border: none;
-    font-size: 16px;
-    height: 100%;
-    width: 24px;
-  }
-  
-  /* Hide folder file actions by default */
-  .node-container .file-actions .folderFileActions {
-    visibility: hidden;
-  }
-  
-  /* Show folder file actions on hover */
-  .node-container:hover .file-actions .folderFileActions {
-    visibility: visible;
-  }
-  
-  /* Hover state for tree items */
-  [role='treeitem']:hover {
-    background-color: #c89df8;
-    color: rgb(5, 0, 0);
-  }
-  
-  /* Focus-within state for tree items */
-  [role='treeitem']:focus-within {
-    background-color: rgba(52, 52, 52, 0.4);
-    outline: none;
-  }
-  
-  /* Selected node styles */
-  .node-container.isSelected {
-    background: #343434;
-    color: white;
-    border-radius: 0;
-  }
-  
-  /* Right side content styles */
-  .content {
-    flex: 1;
-    padding: 32px;
-  }
-  
-  /* List styles in content */
-  .content ul {
-    list-style: none;
-  }
-  
-  /* Specific list item styles in content */
-  .content ul li:nth-child(2),
-  .content ul li:nth-child(3) {
-    margin-bottom: 1rem;
-  }
-  
-  /* Specific styles for the third list item in content */
-  .content ul li:nth-child(3) {
-    color: white;
-    font-weight: bold;
-  }
-  
-  /* Icon small styles */
-  .icon-small {
-    width: 25px; /* Adjust the size as needed */
-    height: 25px; /* Ensure the height matches the width for square icons */
-    padding-left: 3px; /* 2 pixels padding on the left */
-    padding-right: 3px; /* 2 pixels padding on the right */
-  }
+.arborist * {
+  margin: 1px;
+  padding: 1px;
+  box-sizing: border-box;
+}
+
+/* Set height and line-height for html, body, and :root */
+.arborist html,
+.arborist body,
+.arborist :root {
+  height: 100%;
+  line-height: 30px;
+}
+
+/* Set cursor to pointer for buttons */
+.arborist button {
+  cursor: pointer;
+}
+
+/* 
+  ================ 
+  App Container 
+  ================ 
+*/
+
+/* Main container for the app */
+.arborist .app-container {
+  display: flex;
+  gap: 8px;
+  background-color: #151515;
+  color: #999999;
+  min-height: 100vh;
+  overflow-x: auto;
+}
+
+/* 
+  ================ 
+  Sidebar 
+  ================ 
+*/
+
+/* Sidebar styles */
+.arborist .sidebar {
+  padding: 20px;
+  width: 300px;
+  border-right: 1px solid #5c5c5c;
+}
+
+/* 
+  ================ 
+  Node Styles 
+  ================ 
+*/
+
+/* Container for each node */
+.arborist .node-container,
+.arborist .node-content {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  width: 100%;
+}
+
+/* Content of each node */
+.arborist .node-content {
+  cursor: pointer;
+}
+
+/* Arrow icon in node content */
+.arborist .node-content span.arrow {
+  width: 20px;
+  font-size: 20px;
+  display: flex;
+}
+
+/* File or folder icon in node content */
+.arborist .node-content span.file-folder-icon {
+  margin-right: 10px;
+  display: flex;
+  align-items: center;
+  font-size: 20px;
+}
+
+/* Text in node content */
+.arborist .node-content span.node-text {
+  flex: 1;
+  font-size: 15px;
+  /* color: rgb(0, 0, 0); */
+}
+
+/* 
+  ================ 
+  Input Styles 
+  ================ 
+*/
+
+/* Input styles for node content and search input */
+.arborist .node-content input[type='text'],
+.arborist .search-input {
+  padding: 0px 20px;
+  outline: none;
+  color: white;
+  border-radius: 2px;
+}
+
+/* Input styles for node content */
+.arborist .node-content input[type='text'] {
+  width: 97%;
+  border: 1px solid #878787;
+  background: transparent;
+  height: 22px;
+}
+
+/* Search input styles */
+.arborist .search-input {
+  width: 100%;
+  height: 30px;
+  background: #2d2c2c;
+  border: none;
+  margin: 1rem 0;
+}
+
+/* Focus state for search input */
+.arborist .search-input:focus {
+  border: 1px solid #878787;
+}
+
+/* 
+  ================ 
+  File Actions 
+  ================ 
+*/
+
+/* File actions container */
+.arborist .file-actions {
+  height: 100%;
+  display: flex;
+}
+
+/* Button styles for file actions */
+.arborist .file-actions button {
+  cursor: pointer;
+}
+
+/* 
+  ================ 
+  Folder File Actions 
+  ================ 
+*/
+
+/* Folder file actions container */
+.arborist .folderFileActions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-right: 10px;
+}
+
+/* Button styles for folder file actions */
+.arborist .folderFileActions button {
+  display: flex;
+  align-items: center;
+  color: #999999;
+  background-color: inherit;
+  border: none;
+  font-size: 16px;
+  height: 100%;
+  width: 24px;
+}
+
+/* Hide folder file actions by default */
+.arborist .node-container .file-actions .folderFileActions {
+  visibility: hidden;
+}
+
+/* Show folder file actions on hover */
+.arborist .node-container:hover .file-actions .folderFileActions {
+  visibility: visible;
+}
+
+/* 
+  ================ 
+  Tree Item States 
+  ================ 
+*/
+
+/* Hover state for tree items */
+.arborist [role='treeitem']:hover {
+  background-color: #c89df8;
+  color: rgb(5, 0, 0);
+}
+
+/* Focus-within state for tree items */
+.arborist [role='treeitem']:focus-within {
+  background-color: rgba(52, 52, 52, 0.4);
+  outline: none;
+}
+
+/* 
+  ================ 
+  Selected Node Styles 
+  ================ 
+*/
+
+/* Selected node styles */
+.arborist .node-container.isSelected {
+  background: #343434;
+  color: white;
+  border-radius: 0;
+}
+
+/* 
+  ================ 
+  Right Side Content 
+  ================ 
+*/
+
+/* Right side content styles */
+.arborist .content {
+  flex: 1;
+  padding: 32px;
+}
+
+/* List styles in content */
+.arborist .content ul {
+  list-style: none;
+}
+
+/* Specific list item styles in content */
+.arborist .content ul li:nth-child(2),
+.arborist .content ul li:nth-child(3) {
+  margin-bottom: 1rem;
+}
+
+/* Specific styles for the third list item in content */
+.arborist .content ul li:nth-child(3) {
+  color: white;
+  font-weight: bold;
+}
+
+/* 
+  ================ 
+  Icon Small 
+  ================ 
+*/
+
+/* Icon small styles */
+.arborist .icon-small {
+  width: 22px; /* Adjust the size as needed */
+  height: 22px; /* Ensure the height matches the width for square icons */
+  padding-left: 3px; /* 2 pixels padding on the left */
+  padding-right: 3px; /* 2 pixels padding on the right */
+}

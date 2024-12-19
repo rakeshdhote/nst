@@ -107,79 +107,81 @@ const TreeArboristComponentRemote = () => {
   };
 
   return (
-    <div className="flex w-full flex-col">
-      <div className="flex flex-row items-center space-x-1">
-        <div className="relative w-full max-w-md p-2">
-          <Input
-            className="pr-10"
-            placeholder="Search... "
-            type="text"
-            value={term}
-            onChange={(e) => setTerm(e.currentTarget.value)}
-          />
-          <Button
-            className="absolute right-3 top-1/2 -translate-y-1/2"
-            size="icon"
-            variant="ghost"
-            onClick={() => setTerm('')}
-          >
-            <X className="h-5 w-5" />
-          </Button>
-        </div>
-        <Button
-          onClick={handleOpenCloseToggle}
-          style={{ width: '50px' }}
-          title={openAllToggle ? 'Open All' : 'Close All'}
-        >
-          {openAllToggle ? <PanelTopOpen /> : <PanelBottomOpen />}
-        </Button>
-        <Button
-          onClick={() => tree?.createInternal()}
-          style={{ width: '50px' }}
-          title="New Category"
-        >
-          {<FolderPlus />}
-        </Button>
-        {/* <Button
-          style={{ width: '50px' }}
-          onClick={handleEditSubmit}
-          title="Sync Bookmarks"
-        >
-          <RefreshCw />
-        </Button> */}
-        {/* <Button
-          className="bg-red-500 hover:bg-red-500"
-          style={{ width: '100px' }}
-          onClick={handleDownloadClick}
-          title="Download Bookmarks"
-        >
-          <Download /> Export
-        </Button> */}
-        {/* <TooltipComponent /> */}
-      </div>
+    <div className="arborist">
       <div className="flex w-full flex-col">
-        {/* {isDataLoaded && treeData.length > 0 && ( */}
-        {isDataLoaded && (
-          <Tree
-            initialData={data}
-            ref={(t) => {
-              if (t) setTree(t);
-            }}
-            openByDefault={false}
-            // width={1000}
-            // height={800}
-            width={treeDimensions.width}
-            height={treeDimensions.height}
-            indent={24}
-            rowHeight={36}
-            paddingTop={30}
-            paddingBottom={10}
-            padding={25}
-            searchTerm={debouncedTerm}
+        <div className="flex flex-row items-center space-x-1">
+          <div className="relative w-full max-w-md p-2">
+            <Input
+              className="pr-10"
+              placeholder="Search... "
+              type="text"
+              value={term}
+              onChange={(e) => setTerm(e.currentTarget.value)}
+            />
+            <Button
+              className="absolute right-3 top-1/2 -translate-y-1/2"
+              size="icon"
+              variant="ghost"
+              onClick={() => setTerm('')}
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
+          <Button
+            onClick={handleOpenCloseToggle}
+            style={{ width: '50px' }}
+            title={openAllToggle ? 'Open All' : 'Close All'}
           >
-            {Node}
-          </Tree>
-        )}
+            {openAllToggle ? <PanelTopOpen /> : <PanelBottomOpen />}
+          </Button>
+          <Button
+            onClick={() => tree?.createInternal()}
+            style={{ width: '50px' }}
+            title="New Category"
+          >
+            {<FolderPlus />}
+          </Button>
+          {/* <Button
+            style={{ width: '50px' }}
+            onClick={handleEditSubmit}
+            title="Sync Bookmarks"
+          >
+            <RefreshCw />
+          </Button> */}
+          {/* <Button
+            className="bg-red-500 hover:bg-red-500"
+            style={{ width: '100px' }}
+            onClick={handleDownloadClick}
+            title="Download Bookmarks"
+          >
+            <Download /> Export
+          </Button> */}
+          {/* <TooltipComponent /> */}
+        </div>
+        <div className="flex w-full flex-col">
+          {/* {isDataLoaded && treeData.length > 0 && ( */}
+          {isDataLoaded && (
+            <Tree
+              initialData={data}
+              ref={(t) => {
+                if (t) setTree(t);
+              }}
+              openByDefault={false}
+              // width={1000}
+              // height={800}
+              width={treeDimensions.width}
+              height={treeDimensions.height}
+              indent={24}
+              rowHeight={36}
+              paddingTop={30}
+              paddingBottom={10}
+              padding={25}
+              searchTerm={debouncedTerm}
+            >
+              {Node}
+            </Tree>
+          )}
+        </div>
       </div>
     </div>
   );
